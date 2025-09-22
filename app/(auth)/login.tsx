@@ -19,6 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { FontAwesome } from '@expo/vector-icons'
 import DailySpendLogo from '../../components/DailySpendLogo';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { signInWithGoogleWeb, signInWithFacebook, signInWithAppleWeb, useGoogleAuth } from './socialAuth';
 
 const CARD_MAX_WIDTH = 420;
 
@@ -32,11 +33,13 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const passwordRef = useRef<TextInput>(null)
-  
+
   useEffect(() => {
     const timer = setTimeout(() => {}, 500)
     return () => clearTimeout(timer)
   }, [])
+
+  const promptGoogleAuth = useGoogleAuth(router, setError, setIsLoading);
 
   const handleLogin = async () => {
     if (isLoading) return
@@ -62,6 +65,25 @@ const Login = () => {
         setIsLoading(false)
       })
   }
+
+  const handleGoogleSignIn = async () => {
+    if (Platform.OS === 'web') {
+      setIsLoading(true);
+      try {
+        const user = await signInWithGoogleWeb();
+        if (user) {
+          router.push("/dashboard");
+        }
+      } catch (error) {
+        setError("Google sign-in failed. Please try again.");
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      promptGoogleAuth();
+    }
+  };
 
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   // Responsive paddings
@@ -171,27 +193,34 @@ const Login = () => {
                 )}
               </TouchableOpacity>
             </Animated.View>
+            {/* Social icon buttons */}
+            <View style={{ flexDirection: 'row', justifyContent: 'center', marginVertical: 16, gap: 18 }}>
+              <TouchableOpacity
+                onPress={handleGoogleSignIn}
+                style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}
+                activeOpacity={0.8}
+              >
+                <FontAwesome name="google" size={28} color="#EA4335" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={signInWithFacebook}
+                style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}
+                activeOpacity={0.8}
+              >
+                <FontAwesome name="facebook" size={28} color="#1877f3" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={signInWithAppleWeb}
+                style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}
+                activeOpacity={0.8}
+              >
+                <FontAwesome name="apple" size={28} color="#000" />
+              </TouchableOpacity>
+            </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 12 }}>
               <View style={{ flex: 1, height: 1, backgroundColor: '#e5e7eb' }} />
               <Text style={{ marginHorizontal: 12, color: '#94a3b8', fontSize: 13 }}>OR</Text>
               <View style={{ flex: 1, height: 1, backgroundColor: '#e5e7eb' }} />
-            </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 8 }}>
-              {[
-                { provider: 'google', icon: <FontAwesome name="google" size={22} color="#EA4335" /> },
-                { provider: 'apple', icon: <FontAwesome name="apple" size={22} color="#111" /> },
-                { provider: 'facebook', icon: <FontAwesome name="facebook" size={22} color="#1877F3" /> },
-              ].map((item, index) => (
-                <TouchableOpacity
-                  key={item.provider}
-                  style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px 0 rgba(0,0,0,0.08)', marginHorizontal: 8 }}
-                  activeOpacity={0.85}
-                  onPress={() => {}}
-                  accessibilityLabel={`Sign in with ${item.provider}`}
-                >
-                  {item.icon}
-                </TouchableOpacity>
-              ))}
             </View>
             <Pressable
               style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}

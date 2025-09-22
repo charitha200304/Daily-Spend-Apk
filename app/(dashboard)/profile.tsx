@@ -1,37 +1,127 @@
 import { View, Text, TextInput, TouchableOpacity, Alert, Platform, Image, StyleSheet, Animated } from "react-native"
 import React, { useEffect, useRef } from "react"
 import { getAuth, updateProfile } from 'firebase/auth'
+import type { User } from 'firebase/auth';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialIcons } from '@expo/vector-icons';
 import { doc, setDoc, getDoc, getFirestore } from 'firebase/firestore';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 
 const ProfilePlaceholder = require('../../assets/images/react-logo.png');
 
 const ProfileScreen = () => {
-  const auth = getAuth();
-  const user = auth.currentUser;
-  const db = getFirestore();
-  const router = useRouter();
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    const db = getFirestore();
+    const router = useRouter();
 
-  // Use user data from auth (initial, but will be replaced by Firestore)
-  const [name, setName] = React.useState(user?.displayName || '');
-  const [email, setEmail] = React.useState(user?.email || '');
-  const [phone, setPhone] = React.useState(user?.phoneNumber || '');
-  const [profilePic, setProfilePic] = React.useState<string | null>(user?.photoURL || null);
+    // Use user data from auth (initial, but will be replaced by Firestore)
+    const [name, setName] = React.useState(user?.displayName || '');
+    const [email, setEmail] = React.useState(user?.email || '');
+    const [phone, setPhone] = React.useState(user?.phoneNumber || '');
+    const [profilePic, setProfilePic] = React.useState<string | null>(user?.photoURL || null);
 
-  const [editingField, setEditingField] = React.useState(null as null | 'name' | 'phone');
-  const [tempName, setTempName] = React.useState(name);
-  const [tempPhone, setTempPhone] = React.useState(phone);
-  const [saving, setSaving] = React.useState(false);
+    const [editingField, setEditingField] = React.useState(null as null | 'name' | 'phone');
+    const [tempName, setTempName] = React.useState(name);
+    const [tempPhone, setTempPhone] = React.useState(phone);
+    const [saving, setSaving] = React.useState(false);
+    const [loadingProfile, setLoadingProfile] = React.useState(true);
 
-  // Store original profile for unsaved changes check
-  const originalProfile = React.useRef({ name, phone, profilePic });
+    // Store original profile for unsaved changes check
+    const originalProfile = React.useRef({ name, phone, profilePic });
 
-  // Fetch Firestore profile on mount and when user changes
-  React.useEffect(() => {
-    const fetchProfile = async () => {
+    // Fetch Firestore profile on mount and when user changes
+    React.useEffect(() => {
+      const fetchProfile = async () => {
+        if (!user) return;
+        const userDocRef = doc(db, 'users', user.uid);
+        const docSnap = await getDoc(userDocRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setName(data.name || '');
+          setTempName(data.name || '');
+          // Only update phone if Firestore has a value and it's different
+          if (data.phone && data.phone !== phone) {
+            setPhone(data.phone);
+            setTempPhone(data.phone);
+          }
+          setProfilePic(data.photoURL || null);
+          originalProfile.current = {
+            name: data.name || '',
+            phone: data.phone || phone,
+            profilePic: data.photoURL || null,
+          };
+        }
+        setLoadingProfile(false);
+      };
+      fetchProfile();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
+
+    // Helper: check if there are unsaved changes
+    const hasUnsavedChanges = () => {
+      return (
+        name !== originalProfile.current.name ||
+        phone !== originalProfile.current.phone ||
+        profilePic !== originalProfile.current.profilePic
+      );
+    };
+
+    // Intercept back button
+    const handleBack = () => {
+      if (hasUnsavedChanges()) {
+        Alert.alert(
+          'Unsaved Changes',
+          'You have unsaved changes. Do you want to save before leaving?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Discard', style: 'destructive', onPress: () => router.replace('/dashboard') },
+            { text: 'Save', style: 'default', onPress: async () => {
+              await handleSaveProfile();
+              router.replace('/dashboard');
+            }},
+          ]
+        );
+      } else {
+        router.replace('/dashboard');
+      }
+    };
+
+    const pickImage = async () => {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setProfilePic(result.assets[0].uri);
+      }
+    };
+
+    const handleFieldSave = (field: 'name' | 'phone') => {
+      if (field === 'name') {
+        setName(tempName);
+      } else if (field === 'phone') {
+        setPhone(tempPhone);
+      }
+      setEditingField(null);
+    };
+
+    // Refetch profile after saving to immediately update phone in UI
+    const fetchProfile = async (
+      user: User | null,
+      db: any,
+      setName: (name: string) => void,
+      setTempName: (name: string) => void,
+      setPhone: (phone: string) => void,
+      setTempPhone: (phone: string) => void,
+      setProfilePic: (url: string | null) => void,
+      originalProfile: React.MutableRefObject<any>
+    ) => {
       if (!user) return;
       const userDocRef = doc(db, 'users', user.uid);
       const docSnap = await getDoc(userDocRef);
@@ -39,223 +129,173 @@ const ProfileScreen = () => {
         const data = docSnap.data();
         setName(data.name || '');
         setTempName(data.name || '');
-        setPhone(data.phone || '');
-        setTempPhone(data.phone || '');
+        // Only update phone if Firestore has a value and it's different
+        if (data.phone && data.phone !== phone) {
+          setPhone(data.phone);
+          setTempPhone(data.phone);
+        }
         setProfilePic(data.photoURL || null);
-        // Save original profile for change detection
         originalProfile.current = {
           name: data.name || '',
-          phone: data.phone || '',
+          phone: data.phone || phone,
           profilePic: data.photoURL || null,
         };
       }
     };
-    fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
 
-  // Helper: check if there are unsaved changes
-  const hasUnsavedChanges = () => {
+    // Save profile info and picture to Firestore and Auth
+    const handleSaveProfile = async () => {
+      if (!user) return;
+      setSaving(true);
+      try {
+        // Update Firestore user doc (create if not exists)
+        const userDoc = doc(db, 'users', user.uid);
+        await setDoc(userDoc, {
+          name,
+          phone,
+          photoURL: profilePic,
+        }, { merge: true });
+        // Update Auth profile
+        await updateProfile(user, {
+          displayName: name,
+          photoURL: profilePic || undefined,
+        });
+        // Refetch profile to update UI immediately
+        await fetchProfile(user, db, setName, setTempName, setPhone, setTempPhone, setProfilePic, originalProfile);
+        Alert.alert('Success', 'Profile updated!');
+      } catch (e) {
+        Alert.alert('Error', 'Failed to update profile.');
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    const handleLogout = async () => {
+      try {
+        await auth.signOut();
+        router.replace('/login');
+      } catch (e) {
+        Alert.alert('Error', 'Failed to log out.');
+      }
+    };
+
     return (
-      name !== originalProfile.current.name ||
-      phone !== originalProfile.current.phone ||
-      profilePic !== originalProfile.current.profilePic
-    );
-  };
-
-  // Intercept back button
-  const handleBack = () => {
-    if (hasUnsavedChanges()) {
-      Alert.alert(
-        'Unsaved Changes',
-        'You have unsaved changes. Do you want to save before leaving?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Discard', style: 'destructive', onPress: () => router.replace('/dashboard') },
-          { text: 'Save', style: 'default', onPress: async () => {
-            await handleSaveProfile();
-            router.replace('/dashboard');
-          }},
-        ]
-      );
-    } else {
-      router.replace('/dashboard');
-    }
-  };
-
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setProfilePic(result.assets[0].uri);
-    }
-  };
-
-  const handleFieldSave = (field: 'name' | 'phone') => {
-    if (field === 'name') {
-      setName(tempName);
-    } else if (field === 'phone') {
-      setPhone(tempPhone);
-    }
-    setEditingField(null);
-  };
-
-  // Refetch profile after saving to immediately update phone in UI
-  const fetchProfile = async (user, db, setName, setTempName, setPhone, setTempPhone, setProfilePic, originalProfile) => {
-    if (!user) return;
-    const userDocRef = doc(db, 'users', user.uid);
-    const docSnap = await getDoc(userDocRef);
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      setName(data.name || '');
-      setTempName(data.name || '');
-      setPhone(data.phone || '');
-      setTempPhone(data.phone || '');
-      setProfilePic(data.photoURL || null);
-      originalProfile.current = {
-        name: data.name || '',
-        phone: data.phone || '',
-        profilePic: data.photoURL || null,
-      };
-    }
-  };
-
-  // Save profile info and picture to Firestore and Auth
-  const handleSaveProfile = async () => {
-    if (!user) return;
-    setSaving(true);
-    try {
-      // Update Firestore user doc (create if not exists)
-      const userDoc = doc(db, 'users', user.uid);
-      await setDoc(userDoc, {
-        name,
-        phone,
-        photoURL: profilePic,
-      }, { merge: true });
-      // Update Auth profile
-      await updateProfile(user, {
-        displayName: name,
-        photoURL: profilePic || undefined,
-      });
-      // Refetch profile to update UI immediately
-      await fetchProfile(user, db, setName, setTempName, setPhone, setTempPhone, setProfilePic, originalProfile);
-      Alert.alert('Success', 'Profile updated!');
-    } catch (e) {
-      Alert.alert('Error', 'Failed to update profile.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await auth.signOut();
-      router.replace('/login');
-    } catch (e) {
-      Alert.alert('Error', 'Failed to log out.');
-    }
-  };
-
-  return (
-    <View style={{ flex: 1, backgroundColor: '#f3f4f6' }}>
-      <LinearGradient
-        colors={["#3B82F6", "#6366F1", "#9333EA"]}
-        style={styles.headerGradient}
-        start={{ x: 0.1, y: 0 }}
-        end={{ x: 0.9, y: 1 }}
-      >
-        {/* Back Button */}
-        <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
-          <MaterialIcons name="arrow-back" size={28} color="#fff" />
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <TouchableOpacity onPress={pickImage} activeOpacity={0.85} style={styles.avatarOuter}>
-            <Image
-              source={profilePic ? { uri: profilePic } : ProfilePlaceholder}
-              style={styles.avatar}
-              resizeMode="cover"
-            />
-            <View style={styles.avatarEditBtn}>
-              <MaterialIcons name="edit" size={22} color="#fff" />
+      <ErrorBoundary>
+        <View style={{ flex: 1, backgroundColor: '#f3f4f6' }}>
+          {loadingProfile ? (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <Animated.View style={{ opacity: 0.8 }}>
+                <MaterialIcons name="hourglass-empty" size={50} color="#6366F1" />
+              </Animated.View>
+              <Text style={{ color: '#6366F1', marginTop: 10, fontWeight: 'bold' }}>Loading profile...</Text>
             </View>
-          </TouchableOpacity>
-          <Text style={styles.greetingText}>Hello,</Text>
-          <Text style={styles.headerName}>{name || 'User'}</Text>
-          <Text style={styles.headerEmail}>{email}</Text>
+          ) : (
+            <>
+              <LinearGradient
+                colors={["#3B82F6", "#6366F1", "#9333EA"]}
+                style={styles.headerGradient}
+                start={{ x: 0.1, y: 0 }}
+                end={{ x: 0.9, y: 1 }}
+              >
+                {/* Back Button */}
+                <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
+                  <MaterialIcons name="arrow-back" size={28} color="#fff" />
+                </TouchableOpacity>
+                <View style={styles.headerContent}>
+                  <TouchableOpacity onPress={pickImage} activeOpacity={0.85} style={styles.avatarOuter}>
+                    <Image
+                      source={profilePic ? { uri: profilePic } : ProfilePlaceholder}
+                      style={styles.avatar}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.avatarEditBtn}>
+                      <MaterialIcons name="edit" size={22} color="#fff" />
+                    </View>
+                  </TouchableOpacity>
+                  <Text style={styles.greetingText}>Hello,</Text>
+                  <Text style={styles.headerName}>{name || 'User'}</Text>
+                  <Text style={styles.headerEmail}>{email}</Text>
+                </View>
+              </LinearGradient>
+              <View style={styles.profileCard}>
+                {/* Name */}
+                <Text style={styles.label}>Name</Text>
+                {editingField === 'name' ? (
+                  <View style={styles.editRow}>
+                    <TextInput
+                      style={styles.input}
+                      value={tempName}
+                      onChangeText={setTempName}
+                      autoFocus
+                    />
+                    <TouchableOpacity onPress={() => handleFieldSave('name')} style={styles.iconBtn}>
+                      <MaterialIcons name="check" size={24} color="#22c55e" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => { setEditingField(null); setTempName(name); }} style={styles.iconBtn}>
+                      <MaterialIcons name="close" size={24} color="#ef4444" />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoText}>{name || 'No name set'}</Text>
+                    <TouchableOpacity onPress={() => setEditingField('name')} style={styles.iconBtn}>
+                      <MaterialIcons name="edit" size={22} color="#6366F1" />
+                    </TouchableOpacity>
+                  </View>
+                )}
+                {/* Email */}
+                <Text style={styles.label}>Email</Text>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoText}>{email}</Text>
+                  <MaterialIcons name="lock" size={20} color="#64748b" />
+                </View>
+                {/* Phone */}
+                <Text style={styles.label}>Phone</Text>
+                {editingField === 'phone' ? (
+                  <View style={styles.editRow}>
+                    <TextInput
+                      style={styles.input}
+                      value={tempPhone}
+                      onChangeText={setTempPhone}
+                      keyboardType="phone-pad"
+                      autoFocus
+                    />
+                    <TouchableOpacity onPress={() => handleFieldSave('phone')} style={styles.iconBtn}>
+                      <MaterialIcons name="check" size={24} color="#22c55e" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => { setEditingField(null); setTempPhone(phone); }} style={styles.iconBtn}>
+                      <MaterialIcons name="close" size={24} color="#ef4444" />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoText}>{phone || 'No phone set'}</Text>
+                    <TouchableOpacity onPress={() => setEditingField('phone')} style={styles.iconBtn}>
+                      <MaterialIcons name="edit" size={22} color="#6366F1" />
+                    </TouchableOpacity>
+                  </View>
+                )}
+                <View style={styles.divider} />
+                <TouchableOpacity onPress={handleSaveProfile} style={[styles.saveBtn, saving && { opacity: 0.7 }]} activeOpacity={0.88} disabled={saving}>
+                  <Text style={styles.saveText}>{saving ? 'Saving...' : 'Save Changes'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn} activeOpacity={0.88}>
+                  <Text style={styles.logoutText}>Log Out</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
         </View>
-      </LinearGradient>
-      <View style={styles.profileCard}>
-        {/* Name */}
-        <Text style={styles.label}>Name</Text>
-        {editingField === 'name' ? (
-          <View style={styles.editRow}>
-            <TextInput
-              style={styles.input}
-              value={tempName}
-              onChangeText={setTempName}
-              autoFocus
-            />
-            <TouchableOpacity onPress={() => handleFieldSave('name')} style={styles.iconBtn}>
-              <MaterialIcons name="check" size={24} color="#22c55e" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => { setEditingField(null); setTempName(name); }} style={styles.iconBtn}>
-              <MaterialIcons name="close" size={24} color="#ef4444" />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoText}>{name || 'No name set'}</Text>
-            <TouchableOpacity onPress={() => setEditingField('name')} style={styles.iconBtn}>
-              <MaterialIcons name="edit" size={22} color="#6366F1" />
-            </TouchableOpacity>
-          </View>
-        )}
-        {/* Email */}
-        <Text style={styles.label}>Email</Text>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoText}>{email}</Text>
-          <MaterialIcons name="lock" size={20} color="#64748b" />
-        </View>
-        {/* Phone */}
-        <Text style={styles.label}>Phone</Text>
-        {editingField === 'phone' ? (
-          <View style={styles.editRow}>
-            <TextInput
-              style={styles.input}
-              value={tempPhone}
-              onChangeText={setTempPhone}
-              keyboardType="phone-pad"
-              autoFocus
-            />
-            <TouchableOpacity onPress={() => handleFieldSave('phone')} style={styles.iconBtn}>
-              <MaterialIcons name="check" size={24} color="#22c55e" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => { setEditingField(null); setTempPhone(phone); }} style={styles.iconBtn}>
-              <MaterialIcons name="close" size={24} color="#ef4444" />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoText}>{phone || 'No phone set'}</Text>
-            <TouchableOpacity onPress={() => setEditingField('phone')} style={styles.iconBtn}>
-              <MaterialIcons name="edit" size={22} color="#6366F1" />
-            </TouchableOpacity>
-          </View>
-        )}
-        <View style={styles.divider} />
-        <TouchableOpacity onPress={handleSaveProfile} style={[styles.saveBtn, saving && { opacity: 0.7 }]} activeOpacity={0.88} disabled={saving}>
-          <Text style={styles.saveText}>{saving ? 'Saving...' : 'Save Changes'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn} activeOpacity={0.88}>
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
+      </ErrorBoundary>
+    );
+  } catch (err) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <Text style={{ color: 'red', fontSize: 18, fontWeight: 'bold' }}>Profile Error</Text>
+        <Text style={{ color: 'red', marginTop: 8 }}>{err instanceof Error ? err.message : String(err)}</Text>
       </View>
-    </View>
-  );
+    );
+  }
 };
 
 const styles = StyleSheet.create({

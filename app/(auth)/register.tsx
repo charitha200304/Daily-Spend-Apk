@@ -1,7 +1,7 @@
 import { View, Text, TextInput, TouchableOpacity, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform, useWindowDimensions } from "react-native"
 import React, { useState } from "react"
 import { useRouter } from "expo-router"
-import { register } from "@/services/authService"
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { LinearGradient } from 'expo-linear-gradient'
 import DailySpendLogo from '../../components/DailySpendLogo';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
@@ -22,17 +22,27 @@ const Register = () => {
       return
     }
     setIsLoading(true)
-    await register(email, password)
-      .then(() => {
-        router.back()
-      })
-      .catch((err) => {
-        alert("Registration failed. Something went wrong.")
-        console.error(err)
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
+    try {
+      const auth = getAuth();
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Send email verification with error handling
+      if (userCredential.user) {
+        try {
+          await sendEmailVerification(userCredential.user);
+          alert('Verification email sent! Please check your inbox and verify your email before logging in.');
+        } catch (err: any) {
+          alert('Failed to send verification email: ' + (err?.message || 'Unknown error.'));
+          console.error('sendEmailVerification error:', err);
+        }
+      }
+      // Redirect to login screen after sending verification
+      router.replace('/(auth)/login');
+    } catch (err: any) {
+      alert("Registration failed. " + (err?.message || "Something went wrong."))
+      console.error(err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();

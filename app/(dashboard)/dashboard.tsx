@@ -344,24 +344,24 @@ export default function Dashboard() {
         >
           {/* Modern Dashboard Summary Cards */}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 }}>
-            <View style={{ flex: 1, backgroundColor: '#fff', marginRight: 12, borderRadius: 18, padding: 18, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
+            <View style={{ flex: 1, backgroundColor: '#fff', marginRight: 12, borderRadius: 18, padding: 18, alignItems: 'center', ...Platform.select({ web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }, default: { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 } }) }}>
               <FontAwesome name="bank" size={32} color="#6366F1" />
               <Text style={{ fontSize: 16, color: '#64748b', marginTop: 8 }}>Balance</Text>
               <Text style={{ fontWeight: 'bold', fontSize: 22, color: '#222' }}>${balance.toLocaleString()}</Text>
             </View>
-            <View style={{ flex: 1, backgroundColor: '#fff', marginRight: 12, borderRadius: 18, padding: 18, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
+            <View style={{ flex: 1, backgroundColor: '#fff', marginRight: 12, borderRadius: 18, padding: 18, alignItems: 'center', ...Platform.select({ web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }, default: { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 } }) }}>
               <FontAwesome name="arrow-circle-down" size={32} color="#22c55e" />
               <Text style={{ fontSize: 16, color: '#64748b', marginTop: 8 }}>Income</Text>
               <Text style={{ fontWeight: 'bold', fontSize: 22, color: '#22c55e' }}>+${totalIncome.toLocaleString()}</Text>
             </View>
-            <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 18, padding: 18, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
+            <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 18, padding: 18, alignItems: 'center', ...Platform.select({ web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }, default: { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 } }) }}>
               <FontAwesome name="arrow-circle-up" size={32} color="#ef4444" />
               <Text style={{ fontSize: 16, color: '#64748b', marginTop: 8 }}>Expenses</Text>
               <Text style={{ fontWeight: 'bold', fontSize: 22, color: '#ef4444' }}>-${totalExpense.toLocaleString()}</Text>
             </View>
           </View>
           {/* Category Breakdown with Icons */}
-          <View style={{ backgroundColor: '#fff', borderRadius: 18, padding: 18, marginBottom: 24, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 18, padding: 18, marginBottom: 24, ...Platform.select({ web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }, default: { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 } }) }}>
             <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#222', marginBottom: 16 }}>Spending by Category</Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               {categories.map(cat => (
@@ -377,7 +377,7 @@ export default function Dashboard() {
             </View>
           </View>
           {/* Recent Transactions - Customized */}
-          <View style={{ backgroundColor: '#fff', borderRadius: 18, padding: 18, marginBottom: 24, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 18, padding: 18, marginBottom: 24, ...Platform.select({ web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }, default: { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 } }) }}>
             <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#222', marginBottom: 16 }}>Recent Transactions</Text>
             {sortedTransactions.length === 0 ? (
               <Text style={{ color: '#888', textAlign: 'center' }}>No transactions yet.</Text>
@@ -494,13 +494,10 @@ export default function Dashboard() {
               padding: 24,
               marginBottom: 32,
               width: 210,
-              shadowColor: '#000',
-              shadowOpacity: 0.08,
-              shadowRadius: 12,
-              elevation: 3,
+              ...Platform.select({ web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }, default: { shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 12, elevation: 3 } }),
             }}>
               {user?.photoURL ? (
-                <View style={{ width: 74, height: 74, borderRadius: 37, borderWidth: 3, borderColor: '#fff', marginBottom: 14, backgroundColor: '#e0e7ff', shadowColor: '#000', shadowOpacity: 0.10, shadowRadius: 6, elevation: 2, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                <View style={{ width: 74, height: 74, borderRadius: 37, borderWidth: 3, borderColor: '#fff', marginBottom: 14, backgroundColor: '#e0e7ff', ...Platform.select({ web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }, default: { shadowColor: '#000', shadowOpacity: 0.10, shadowRadius: 6, elevation: 2 } }), alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                   <Image
                     source={{ uri: user.photoURL }}
                     style={{ width: 74, height: 74, borderRadius: 37 }}
@@ -508,7 +505,7 @@ export default function Dashboard() {
                   />
                 </View>
               ) : (
-                <View style={{ width: 74, height: 74, borderRadius: 37, backgroundColor: '#e0e7ff', borderWidth: 3, borderColor: '#fff', alignItems: 'center', justifyContent: 'center', marginBottom: 14, shadowColor: '#000', shadowOpacity: 0.10, shadowRadius: 6, elevation: 2 }}>
+                <View style={{ width: 74, height: 74, borderRadius: 37, backgroundColor: '#e0e7ff', borderWidth: 3, borderColor: '#fff', alignItems: 'center', justifyContent: 'center', marginBottom: 14, ...Platform.select({ web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }, default: { shadowColor: '#000', shadowOpacity: 0.10, shadowRadius: 6, elevation: 2 } }) }}>
                   <FontAwesome name="user" size={38} color="#6366F1" />
                 </View>
               )}
@@ -530,10 +527,7 @@ export default function Dashboard() {
                   justifyContent: 'center',
                   width: 140,
                   marginTop: 8,
-                  shadowColor: '#000',
-                  shadowOpacity: 0.10,
-                  shadowRadius: 4,
-                  elevation: 2,
+                  ...Platform.select({ web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }, default: { shadowColor: '#000', shadowOpacity: 0.10, shadowRadius: 4, elevation: 2 } }),
                 }}
               >
                 <FontAwesome name="sign-out" size={18} color="#fff" style={{ marginRight: 8 }} />
