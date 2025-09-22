@@ -114,7 +114,7 @@ export default function AddTransactionModal({
           {error ? (
             <Text style={{ color: '#ef4444', marginBottom: 8 }}>{error}</Text>
           ) : null}
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 12 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 16 }}>
             <TouchableOpacity onPress={onClose} style={styles.cancelBtn}>
               <Text style={{ color: '#6366F1', fontWeight: '600' }}>Cancel</Text>
             </TouchableOpacity>
@@ -144,8 +144,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 22,
     padding: 32,
-    width: '98%',
-    maxWidth: 480,
+    width: '95%',
+    maxWidth: 420,
+    minWidth: 260,
+    alignItems: 'center',
+    justifyContent: 'center',
     // Use boxShadow for web, shadow* for native
     ...(Platform.OS === 'web'
       ? { boxShadow: '0px 8px 18px rgba(0,0,0,0.07)' }
@@ -164,12 +167,14 @@ const styles = StyleSheet.create({
     color: '#6366F1',
     marginBottom: 18,
     textAlign: 'center',
+    alignSelf: 'center',
   },
   typeRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 12,
     marginBottom: 18,
+    alignSelf: 'center',
   },
   typeBtn: {
     flexDirection: 'row',
@@ -206,23 +211,34 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e5e7eb',
     color: '#222',
+    alignSelf: 'stretch',
+    textAlign: 'left',
   },
   categoryRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+    marginBottom: 20,
+    alignSelf: 'center',
+    width: '100%',
+    flexWrap: 'wrap',
+    gap: 6,
   },
   catBtn: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 12,
     backgroundColor: '#f1f5f9',
-    paddingHorizontal: 14,
+    paddingHorizontal: 0,
     paddingVertical: 12,
-    marginHorizontal: 2,
+    marginHorizontal: 0,
     borderWidth: 1.5,
     borderColor: '#f1f5f9',
+    justifyContent: 'center',
+    minWidth: 68,
+    flex: 1,
+    margin: 2,
+    maxWidth: 100,
   },
   catActive: {
     backgroundColor: '#6366F1',
@@ -233,11 +249,13 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 10,
     backgroundColor: '#f1f5f9',
+    alignSelf: 'center',
   },
   saveBtn: {
     paddingHorizontal: 22,
     paddingVertical: 14,
     borderRadius: 10,
     backgroundColor: '#6366F1',
+    alignSelf: 'center',
   },
 });

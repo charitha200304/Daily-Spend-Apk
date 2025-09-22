@@ -7,7 +7,7 @@ import {
   Alert
 } from "react-native"
 import React, { useEffect, useState } from "react"
-import { getAllTask, getAllTaskData, getTasksCollection } from "@/services/taskService"
+import { getAllTask, getAllTaskData, getTasksCollection, deleteTask } from "@/services/taskService"
 import { MaterialIcons } from "@expo/vector-icons"
 import { useRouter, useSegments } from "expo-router"
 import { Task } from "@/types/task"
@@ -70,15 +70,23 @@ const TasksScreen = () => {
     return () => unsubscribe()
   }, [])
 
-  const handleDelete = () => {
-    Alert.alert("Alert Title", "Alert Desc", [
-      { text: "Cancel" },
+  const handleDelete = (taskId: string) => {
+    Alert.alert("Delete Task", "Are you sure you want to delete this task?", [
+      { text: "Cancel", style: "cancel" },
       {
         text: "Delete",
+        style: "destructive",
         onPress: async () => {
-          // user is confirmed
-          // so delete task
-          //
+          try {
+            showLoader();
+            await deleteTask(taskId);
+            // Optionally, you can call handleFetchData() or rely on onSnapshot for updates
+          } catch (err) {
+            console.error("Failed to delete task:", err);
+            Alert.alert("Error", "Failed to delete task");
+          } finally {
+            hideLoader();
+          }
         }
       }
     ])
@@ -112,11 +120,11 @@ const TasksScreen = () => {
               <View className="flex-row">
                 <TouchableOpacity
                   className="bg-yellow-300 px-3 py-1 rounded"
-                  onPress={() => router.push(`/(dashboard)/tasks/${task.id}`)}
+                  onPress={() => router.push(`/(dashboard)/tasks/${task.id ?? ""}`)}
                 >
                   <Text className="text-xl">Edit</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className="bg-red-500 px-3 py-1 rounded ml-3">
+                <TouchableOpacity className="bg-red-500 px-3 py-1 rounded ml-3" onPress={() => handleDelete(task.id ?? "")}>
                   <Text className="text-xl">Delete</Text>
                 </TouchableOpacity>
               </View>

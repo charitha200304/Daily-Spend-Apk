@@ -4,14 +4,12 @@ import { Slot, Stack } from "expo-router"
 import { AuthProvider } from "@/context/AuthContext"
 import { LoaderProvider } from "@/context/LoaderContext"
 
-const RootLayout = () => {
+export default function RootLayout() {
   return (
-    <LoaderProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <LoaderProvider>
         <Slot />
-      </AuthProvider>
-    </LoaderProvider>
-  )
+      </LoaderProvider>
+    </AuthProvider>
+  );
 }
-
-export default RootLayout
