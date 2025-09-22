@@ -93,7 +93,7 @@ export default function AddTransactionModal({
             keyboardType="decimal-pad"
             style={styles.input}
           />
-          <View style={styles.categoryRow}>
+          <View style={[styles.categoryRow, { flexDirection: 'row' }]}>
             {CATEGORIES.map((cat) => (
               <TouchableOpacity
                 key={cat.label}
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   categoryRow: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'space-evenly',
     alignItems: 'center',
     marginBottom: 20,

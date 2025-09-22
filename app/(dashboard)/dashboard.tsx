@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, FlatList, Alert, Platform, Button, TextInput, Modal, SafeAreaView } from 'react-native';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert, Platform, Button, TextInput, Modal, SafeAreaView, Animated, Dimensions, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome } from '@expo/vector-icons';
 import DailySpendLogo from '../../components/DailySpendLogo';
@@ -19,6 +19,111 @@ const categories = [
 
 const HEADER_HEIGHT = Platform.OS === 'web' ? 110 : 170;
 
+// Utility to get cross-platform shadow
+const getShadow = () =>
+  Platform.OS === 'web'
+    ? { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }
+    : {
+        shadowColor: '#000',
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 2,
+      };
+
+const styles = StyleSheet.create({
+  container: {
+    paddingTop: 0,
+    paddingBottom: 110,
+    alignItems: 'stretch',
+    minHeight: '100%',
+  },
+  fixedHeader: {
+    position: 'relative',
+    width: '100%',
+    zIndex: 100,
+    elevation: 5,
+    ...getShadow(),
+  },
+  headerGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: Platform.OS === 'web' ? 12 : 36,
+    paddingBottom: 8,
+    paddingHorizontal: 18,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    width: '100%',
+  },
+  bottomNavFixed: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    paddingVertical: 10,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    ...getShadow(),
+  },
+  drawer: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 260,
+    backgroundColor: '#6366F1',
+    zIndex: 999,
+    borderTopLeftRadius: 24,
+    borderBottomLeftRadius: 24,
+    paddingTop: 32,
+    paddingHorizontal: 18,
+    ...getShadow(),
+  },
+  navItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  navActive: {
+    color: '#6366F1',
+    fontWeight: '700',
+    fontSize: 13,
+    marginTop: 2,
+  },
+  navInactive: {
+    color: '#64748b',
+    fontWeight: '500',
+    fontSize: 13,
+    marginTop: 2,
+  },
+  drawerClose: {
+    position: 'absolute',
+    top: 18,
+    right: 18,
+    zIndex: 1000,
+  },
+  drawerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4f46e5',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    marginBottom: 24,
+    width: '100%',
+    justifyContent: 'center',
+  },
+  drawerButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 17,
+    marginLeft: 12,
+  },
+});
+
 export default function Dashboard() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -32,6 +137,9 @@ export default function Dashboard() {
   const auth = getAuth();
   const user = auth.currentUser;
   const router = useRouter();
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const drawerAnim = useRef(new Animated.Value(Dimensions.get('window').width)).current;
 
   // Handler for scroll position
   const handleScroll = (event: any) => {
@@ -178,33 +286,59 @@ export default function Dashboard() {
     setShowCategoryModal(false);
   }, [newCategoryName, newCategoryIcon, newCategoryColor]);
 
+  // Open/close drawer animation
+  const openDrawer = () => {
+    setDrawerVisible(true);
+    Animated.timing(drawerAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
+  const closeDrawer = () => {
+    Animated.timing(drawerAnim, {
+      toValue: Dimensions.get('window').width,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
+    setTimeout(() => setDrawerVisible(false), 250); // Hide after animation
+  };
+
   return (
     <LinearGradient colors={["#3B82F6", "#6366F1", "#9333EA"]} style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
-        {/* Fixed Header with SafeAreaView for native */}
-        <SafeAreaView style={{ backgroundColor: '#3B82F6', zIndex: 100 }}>
+        {/* Animated Header with SafeAreaView for native */}
+        <SafeAreaView style={{ backgroundColor: 'transparent', zIndex: 100 }}>
           <View style={styles.fixedHeader}>
             <LinearGradient
               colors={[`rgba(59,130,246,1)`, `rgba(99,102,241,1)`]}
               style={styles.headerGradient}
             >
+              {/* Overlay for animated opacity */}
               <View style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
                 <DailySpendLogo width={32} height={32} />
               </View>
               <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 24, textAlign: 'center', flex: 1 }}>
                 Daily Spend
               </Text>
-              <View style={{ width: 32, height: 32, alignItems: 'flex-end', justifyContent: 'center' }}>
+              {/* Menu Button (Hamburger) replaces profile icon */}
+              <TouchableOpacity
+                style={{ width: 32, height: 32, alignItems: 'flex-end', justifyContent: 'center' }}
+                onPress={openDrawer}
+              >
                 <View style={{ backgroundColor: '#fff', borderRadius: 16, width: 32, height: 32, alignItems: 'center', justifyContent: 'center' }}>
-                  <FontAwesome name="user" size={20} color="#6366F1" />
+                  <FontAwesome name="bars" size={20} color="#6366F1" />
                 </View>
-              </View>
+              </TouchableOpacity>
             </LinearGradient>
           </View>
         </SafeAreaView>
-        <ScrollView
-          contentContainerStyle={[styles.container, { paddingTop: HEADER_HEIGHT }]}
-          onScroll={handleScroll}
+        <Animated.ScrollView
+          contentContainerStyle={styles.container}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
           scrollEventThrottle={16}
           style={{ flex: 1 }}
         >
@@ -303,7 +437,7 @@ export default function Dashboard() {
                   onChangeText={setNewCategoryName}
                 />
                 <Text style={{ marginBottom: 6 }}>Pick Icon</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+                <View style={{ flexDirection: 'row', marginBottom: 10 }}>
                   {iconOptions.map((icon) => (
                     <TouchableOpacity
                       key={icon}
@@ -313,7 +447,7 @@ export default function Dashboard() {
                       <FontAwesome name={icon} size={20} color={newCategoryIcon === icon ? '#6366F1' : '#888'} />
                     </TouchableOpacity>
                   ))}
-                </ScrollView>
+                </View>
                 <Text style={{ marginBottom: 6 }}>Pick Color</Text>
                 <View style={{ flexDirection: 'row', marginBottom: 16 }}>
                   {['#6366F1', '#3B82F6', '#9333EA', '#22c55e', '#818CF8', '#F59E42', '#F43F5E', '#FACC15'].map((color) => (
@@ -335,7 +469,109 @@ export default function Dashboard() {
               </View>
             </View>
           </Modal>
-        </ScrollView>
+        </Animated.ScrollView>
+        {/* Right-side Drawer */}
+        {drawerVisible && (
+          <Animated.View
+            style={[
+              styles.drawer,
+              { right: 0, transform: [{ translateX: drawerAnim }] },
+            ]}
+          >
+            {/* App Branding and Greeting */}
+            <View style={{ alignItems: 'center', marginBottom: 18, width: '100%' }}>
+              <DailySpendLogo width={38} height={38} style={{ marginBottom: 6 }} />
+              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 22, letterSpacing: 0.2, marginBottom: 2 }}>Daily Spend</Text>
+              <Text style={{ color: '#dbeafe', fontSize: 15, marginBottom: 2 }}>
+                Hi, {user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || 'User'}!
+              </Text>
+            </View>
+            {/* Modern Profile Card */}
+            <View style={{
+              alignItems: 'center',
+              backgroundColor: 'rgba(255,255,255,0.12)',
+              borderRadius: 20,
+              padding: 24,
+              marginBottom: 32,
+              width: 210,
+              shadowColor: '#000',
+              shadowOpacity: 0.08,
+              shadowRadius: 12,
+              elevation: 3,
+            }}>
+              {user?.photoURL ? (
+                <View style={{ width: 74, height: 74, borderRadius: 37, borderWidth: 3, borderColor: '#fff', marginBottom: 14, backgroundColor: '#e0e7ff', shadowColor: '#000', shadowOpacity: 0.10, shadowRadius: 6, elevation: 2, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  <Image
+                    source={{ uri: user.photoURL }}
+                    style={{ width: 74, height: 74, borderRadius: 37 }}
+                    resizeMode="cover"
+                  />
+                </View>
+              ) : (
+                <View style={{ width: 74, height: 74, borderRadius: 37, backgroundColor: '#e0e7ff', borderWidth: 3, borderColor: '#fff', alignItems: 'center', justifyContent: 'center', marginBottom: 14, shadowColor: '#000', shadowOpacity: 0.10, shadowRadius: 6, elevation: 2 }}>
+                  <FontAwesome name="user" size={38} color="#6366F1" />
+                </View>
+              )}
+              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 20, marginBottom: 8, textAlign: 'center', letterSpacing: 0.2 }}>
+                {user?.displayName || user?.email || 'User'}
+              </Text>
+              <TouchableOpacity
+                onPress={async () => {
+                  await auth.signOut();
+                  router.replace('/login');
+                }}
+                style={{
+                  backgroundColor: '#ef4444',
+                  borderRadius: 50,
+                  paddingVertical: 10,
+                  paddingHorizontal: 0,
+                  alignItems: 'center',
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  width: 140,
+                  marginTop: 8,
+                  shadowColor: '#000',
+                  shadowOpacity: 0.10,
+                  shadowRadius: 4,
+                  elevation: 2,
+                }}
+              >
+                <FontAwesome name="sign-out" size={18} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>Log out</Text>
+              </TouchableOpacity>
+            </View>
+            {/* Divider */}
+            <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.15)', width: '90%', marginBottom: 28, borderRadius: 1 }} />
+            {/* Drawer Buttons */}
+            <TouchableOpacity
+              style={styles.drawerButton}
+              onPress={() => {
+                setShowModal(true); // Open Add Transaction modal
+                closeDrawer();
+              }}
+            >
+              <FontAwesome name="plus-circle" size={22} color="#fff" />
+              <Text style={styles.drawerButtonText}>Add Transaction</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.drawerButton}
+              onPress={() => {
+                router.push('/(dashboard)/profile');
+                closeDrawer();
+              }}
+            >
+              <FontAwesome name="user" size={22} color="#fff" />
+              <Text style={styles.drawerButtonText}>Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.drawerButton, { backgroundColor: '#fff', marginTop: 8 }]}
+              onPress={closeDrawer}
+            >
+              <FontAwesome name="arrow-left" size={16} color="#6366F1" />
+              <Text style={[styles.drawerButtonText, { color: '#6366F1' }]}>Back</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
         {/* Fixed Bottom Navigation Bar */}
         <View style={styles.bottomNavFixed}>
           <TouchableOpacity style={styles.navItem}>
@@ -354,72 +590,3 @@ export default function Dashboard() {
     </LinearGradient>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    paddingTop: 38,
-    paddingBottom: 110,
-    alignItems: 'stretch',
-    minHeight: '100%',
-  },
-  fixedHeader: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: HEADER_HEIGHT,
-    zIndex: 100,
-  },
-  headerGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'web' ? 36 : 90,
-    paddingBottom: 18,
-    paddingHorizontal: 18,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-  },
-  bottomNavFixed: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    paddingVertical: 10,
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    // Use boxShadow for web, shadow* for native
-    ...(Platform.OS === 'web'
-      ? { boxShadow: '0px -2px 8px rgba(0,0,0,0.04)' }
-      : {
-          shadowColor: '#000',
-          shadowOpacity: 0.04,
-          shadowRadius: 8,
-          shadowOffset: { width: 0, height: -2 },
-          elevation: 10,
-        }
-    ),
-    zIndex: 99,
-  },
-  navItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-  },
-  navActive: {
-    color: '#6366F1',
-    fontWeight: '700',
-    fontSize: 13,
-    marginTop: 2,
-  },
-  navInactive: {
-    color: '#64748b',
-    fontWeight: '500',
-    fontSize: 13,
-    marginTop: 2,
-  },
-});
