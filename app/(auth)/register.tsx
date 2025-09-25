@@ -25,7 +25,7 @@ const Register = () => {
     try {
       const auth = getAuth();
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      // Send email verification with error handling
+      // Only use Firebase Auth to send verification email
       if (userCredential.user) {
         try {
           await sendEmailVerification(userCredential.user);
@@ -34,14 +34,8 @@ const Register = () => {
           console.error('sendEmailVerification error:', err);
         }
       }
-      // Send verification code via backend
-      await fetch('http://localhost:3001/send-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      // Redirect to code verification screen
-      router.replace({ pathname: '/(auth)/EmailCodeVerificationScreen', params: { email } });
+      // Redirect to verify email screen after registration
+      // router.replace('/(auth)/VerifyEmailScreen');
     } catch (err: any) {
       alert("Registration failed. " + (err?.message || "Something went wrong."))
       console.error(err)
