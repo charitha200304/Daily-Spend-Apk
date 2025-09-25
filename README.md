@@ -1,50 +1,85 @@
-# Welcome to your Expo app 👋
+# 💸 Daily Spend App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A cross-platform expense tracking app built with Expo, React Native, and Firebase. Track your daily expenses, register securely with email authentication, and enjoy seamless navigation with deep linking support.
 
-## Get started
+---
 
-1. Install dependencies
+## ✨ Features
 
-   ```bash
-   npm install
-   ```
+- 📊 **Dashboard**: Visualize and manage your daily spending.
+- 🔒 **Email Authentication**: Register and sign in securely using your email.
+- ✉️ **Email Verification**: Secure your account with email verification. Clicking the verification link in your email will automatically verify and log you in.
+- 🔗 **Deep Linking**: Open the app directly from email links (e.g., `amdday01://verify?oobCode=...`).
+- 🎨 **Modern UI**: Built with React Native, Expo Router, and Tailwind CSS for a beautiful and responsive design.
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
+## 🚀 Getting Started
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+### 1. 🧑‍💻 Clone the Repository
 ```bash
-npm run reset-project
+git clone <your-repo-url>
+cd Daily-Spend
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. 📦 Install Dependencies
+```bash
+npm install
+```
 
-## Learn more
+### 3. 🔥 Set Up Firebase
+- Create a Firebase project at [Firebase Console](https://console.firebase.google.com/).
+- Enable Email/Password authentication.
+- Download your `google-services.json` (Android) and/or `GoogleService-Info.plist` (iOS) and place them in the appropriate folders.
+- Update your Firebase config in `firebase.ts`.
 
-To learn more about developing your project with Expo, look at the following resources:
+### 4. 🔗 Configure Deep Linking
+- Make sure your Firebase email verification template uses links like:
+  - `amdday01://verify?oobCode=...`
+  - or `https://daily-spend.firebaseapp.com/verify?oobCode=...`
+- The app will auto-navigate to the dashboard after verifying the email.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### 5. ▶️ Run the App
+```bash
+npx expo start
+```
+- Open in Expo Go, an emulator, or a device.
 
-## Join the community
+---
 
-Join our community of developers creating universal apps.
+## 📂 Folder Structure
+```
+app/
+  (auth)/
+    EmailCodeVerificationScreen.tsx  # Handles email verification via deep link
+    login.tsx
+    register.tsx
+    _layout.tsx
+  (dashboard)/
+    dashboard.tsx
+    ...
+components/
+context/
+services/
+firebase.ts
+linking.ts
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+---
+
+## 🛠️ Tech Stack
+- ⚛️ [Expo](https://expo.dev/)
+- 📱 [React Native](https://reactnative.dev/)
+- 🗺️ [Expo Router](https://expo.github.io/router/docs)
+- 🔥 [Firebase Auth](https://firebase.google.com/docs/auth)
+- 💨 [Tailwind CSS (NativeWind)](https://www.nativewind.dev/)
+
+---
+
+## 🤝 Contributing
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+
+---
+
+## 📄 License
+[MIT](LICENSE)
