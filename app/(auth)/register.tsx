@@ -29,14 +29,19 @@ const Register = () => {
       if (userCredential.user) {
         try {
           await sendEmailVerification(userCredential.user);
-          alert('Verification email sent! Please check your inbox and verify your email before logging in.');
         } catch (err: any) {
           alert('Failed to send verification email: ' + (err?.message || 'Unknown error.'));
           console.error('sendEmailVerification error:', err);
         }
       }
-      // Redirect to login screen after sending verification
-      router.replace('/(auth)/login');
+      // Send verification code via backend
+      await fetch('http://localhost:3001/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      // Redirect to code verification screen
+      router.replace({ pathname: '/(auth)/EmailCodeVerificationScreen', params: { email } });
     } catch (err: any) {
       alert("Registration failed. " + (err?.message || "Something went wrong."))
       console.error(err)
