@@ -1,0 +1,749 @@
+Index: eas.json
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>{\r\n  \"cli\": {\r\n    \"version\": \">= 16.19.3\",\r\n    \"appVersionSource\": \"remote\"\r\n  },\r\n  \"build\": {\r\n    \"development\": {\r\n      \"developmentClient\": true,\r\n      \"distribution\": \"internal\"\r\n    },\r\n    \"preview\": {\r\n      \"android\": {\r\n        \"buildType\": \"apk\"\r\n      },\r\n      \"distribution\": \"internal\"\r\n    },\r\n    \"preview2\": {\r\n      \"android\": {\r\n        \"gradleCommand\": \":app:assembleRelease\"\r\n      }\r\n    },\r\n    \"preview3\": {\r\n      \"developmentClient\": true,\r\n      \"distribution\": \"internal\"\r\n    },\r\n    \"production\": {\r\n      \"autoIncrement\": true\r\n    }\r\n  },\r\n  \"submit\": {\r\n    \"production\": {}\r\n  }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/eas.json b/eas.json
+--- a/eas.json	(revision 3fa78d0cc23c0ce196fba3d5f9689aedc47ab2d8)
++++ b/eas.json	(date 1760478054476)
+@@ -24,7 +24,10 @@
+       "distribution": "internal"
+     },
+     "production": {
+-      "autoIncrement": true
++      "android": {
++        "buildType": "apk"
++      }
++
+     }
+   },
+   "submit": {
+Index: app/(auth)/login.tsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import {\r\n  View,\r\n  Text,\r\n  Pressable,\r\n  TextInput,\r\n  TouchableOpacity,\r\n  Alert,\r\n  ActivityIndicator,\r\n  KeyboardAvoidingView,\r\n  Platform,\r\n  Keyboard,\r\n  useWindowDimensions\r\n} from \"react-native\"\r\nimport React, { useState, useRef, useEffect } from \"react\"\r\nimport { useRouter } from \"expo-router\"\r\nimport { login, register } from \"@/services/authService\"\r\nimport { BlurView } from 'expo-blur'\r\nimport { LinearGradient } from 'expo-linear-gradient'\r\nimport { FontAwesome } from '@expo/vector-icons'\r\nimport DailySpendLogo from '../../components/DailySpendLogo';\r\nimport Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';\r\nimport { signInWithGoogleWeb, signInWithFacebook, signInWithAppleWeb, useGoogleAuth } from './socialAuth';\r\n\r\nconst CARD_MAX_WIDTH = 420;\r\n\r\nconst Login = () => {\r\n  const router = useRouter()\r\n  const [email, setEmail] = useState<string>(\"\")\r\n  const [password, setPassword] = useState<string>(\"\")\r\n  const [isLoading, setIsLoading] = useState<boolean>(false)\r\n  const [isEmailFocused, setIsEmailFocused] = useState(false)\r\n  const [isPasswordFocused, setIsPasswordFocused] = useState(false)\r\n  const [showPassword, setShowPassword] = useState(false)\r\n  const [error, setError] = useState(\"\")\r\n  const passwordRef = useRef<TextInput>(null)\r\n\r\n  useEffect(() => {\r\n    const timer = setTimeout(() => {}, 500)\r\n    return () => clearTimeout(timer)\r\n  }, [])\r\n\r\n  const promptGoogleAuth = useGoogleAuth(router, setError, setIsLoading);\r\n\r\n  const handleLogin = async () => {\r\n    if (isLoading) return\r\n    setError(\"\")\r\n    if (!email || !/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)) {\r\n      setError(\"Please enter a valid email address.\")\r\n      return\r\n    }\r\n    if (!password) {\r\n      setError(\"Password cannot be empty.\")\r\n      return\r\n    }\r\n    setIsLoading(true)\r\n    await login(email, password)\r\n      .then((res) => {\r\n        router.push(\"/dashboard\")\r\n      })\r\n      .catch((err) => {\r\n        setError(\"Login failed. Please check your credentials.\")\r\n        console.error(err)\r\n      })\r\n      .finally(() => {\r\n        setIsLoading(false)\r\n      })\r\n  }\r\n\r\n  const handleGoogleSignIn = async () => {\r\n    if (Platform.OS === 'web') {\r\n      setIsLoading(true);\r\n      try {\r\n        const user = await signInWithGoogleWeb();\r\n        if (user) {\r\n          router.push(\"/dashboard\");\r\n        }\r\n      } catch (error) {\r\n        setError(\"Google sign-in failed. Please try again.\");\r\n        console.error(error);\r\n      } finally {\r\n        setIsLoading(false);\r\n      }\r\n    } else {\r\n      promptGoogleAuth();\r\n    }\r\n  };\r\n\r\n  const { width: screenWidth, height: screenHeight } = useWindowDimensions();\r\n  // Responsive paddings\r\n  const horizontalPad = screenWidth < 400 ? 12 : screenWidth < 600 ? 24 : 48;\r\n  const verticalPad = screenWidth < 400 ? 16 : screenWidth < 600 ? 24 : 36;\r\n  const cardPad = screenWidth < 400 ? 16 : screenWidth < 600 ? 24 : 36;\r\n  const appNameFont = screenWidth < 400 ? 28 : screenWidth < 600 ? 36 : 44;\r\n  const subtitleFont = screenWidth < 400 ? 13 : screenWidth < 600 ? 15 : 16;\r\n\r\n  return (\r\n    <KeyboardAvoidingView \r\n      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}\r\n      style={{ flex: 1 }}\r\n    >\r\n      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: horizontalPad }}>\r\n          {/* Animated Gradient Background */}\r\n          <LinearGradient\r\n            colors={[\"#3B82F6\", \"#6366F1\", \"#9333EA\"]}\r\n            start={{ x: 0, y: 0 }}\r\n            end={{ x: 1, y: 1 }}\r\n            style={{\r\n              position: 'absolute',\r\n              left: 0,\r\n              top: 0,\r\n              width: screenWidth,\r\n              height: screenHeight,\r\n              zIndex: -1,\r\n              pointerEvents: 'none',\r\n            }}\r\n          />\r\n          {/* Logo and App Name Header */}\r\n          <Animated.View entering={FadeInDown.duration(700).springify()} style={{ alignItems: 'center', marginBottom: verticalPad, marginTop: verticalPad, width: '100%' }}>\r\n            <DailySpendLogo width={96} height={96} style={{ marginBottom: 16 }} />\r\n            <Animated.Text entering={FadeInDown.delay(100).duration(700).springify()} style={{ fontSize: appNameFont, fontWeight: '800', color: 'white', letterSpacing: 2 }}>Daily Spend</Animated.Text>\r\n            <Animated.Text entering={FadeInDown.delay(200).duration(700).springify()} style={{ fontSize: subtitleFont, color: '#dbeafe', marginTop: 8 }}>Track your expenses smartly</Animated.Text>\r\n          </Animated.View>\r\n\r\n          {/* Card-style Form */}\r\n          <Animated.View\r\n            entering={FadeInUp.delay(300).duration(700).springify()}\r\n            style={{\r\n              width: '100%',\r\n              maxWidth: CARD_MAX_WIDTH,\r\n              minWidth: 0,\r\n              backgroundColor: 'white',\r\n              borderRadius: 28,\r\n              paddingHorizontal: cardPad,\r\n              paddingVertical: cardPad + 8,\r\n              boxShadow: '0 8px 24px 0 rgba(0,0,0,0.09)',\r\n            }}\r\n          >\r\n            {error ? (\r\n              <Text style={{ color: '#ef4444', fontSize: 15, marginBottom: 10, textAlign: 'center' }}>{error}</Text>\r\n            ) : null}\r\n            <TextInput\r\n              placeholder=\"Email\"\r\n              value={email}\r\n              onChangeText={setEmail}\r\n              style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16, fontSize: 16, color: '#222' }}\r\n              autoCapitalize=\"none\"\r\n              autoComplete=\"off\"\r\n              spellCheck={false}\r\n              autoCorrect={false}\r\n              keyboardType=\"email-address\"\r\n              returnKeyType=\"next\"\r\n              onSubmitEditing={() => passwordRef.current?.focus()}\r\n              accessibilityLabel=\"Email Address\"\r\n            />\r\n            <View style={{ position: 'relative', marginBottom: 16 }}>\r\n              <TextInput\r\n                ref={passwordRef}\r\n                placeholder=\"Password\"\r\n                value={password}\r\n                onChangeText={setPassword}\r\n                secureTextEntry={!showPassword}\r\n                style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, color: '#222', paddingRight: 40 }}\r\n                autoCapitalize=\"none\"\r\n                autoComplete=\"off\"\r\n                spellCheck={false}\r\n                autoCorrect={false}\r\n                returnKeyType=\"done\"\r\n                accessibilityLabel=\"Password\"\r\n              />\r\n              <TouchableOpacity\r\n                onPress={() => setShowPassword(!showPassword)}\r\n                style={{ position: 'absolute', right: 8, top: 8, padding: 4 }}\r\n                accessibilityLabel={showPassword ? \"Hide Password\" : \"Show Password\"}\r\n              >\r\n                <FontAwesome name={showPassword ? \"eye-slash\" : \"eye\"} size={20} color=\"#888\" />\r\n              </TouchableOpacity>\r\n            </View>\r\n            <Pressable style={{ alignItems: 'flex-end', marginBottom: 16 }} onPress={() => {}}>\r\n              <Text style={{ color: '#3B82F6', fontWeight: '500', fontSize: 14 }}>Forgot Password?</Text>\r\n            </Pressable>\r\n            <Animated.View entering={FadeInUp.delay(400).duration(700).springify()}>\r\n              <TouchableOpacity\r\n                onPress={handleLogin}\r\n                disabled={isLoading}\r\n                style={{ width: '100%', paddingVertical: 14, borderRadius: 12, backgroundColor: isLoading ? '#60a5fa' : '#2563eb', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}\r\n                activeOpacity={0.92}\r\n                accessibilityLabel=\"Sign In\"\r\n              >\r\n                {isLoading ? (\r\n                  <ActivityIndicator color=\"#fff\" size=\"small\" />\r\n                ) : (\r\n                  <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>Sign In</Text>\r\n                )}\r\n              </TouchableOpacity>\r\n            </Animated.View>\r\n            {/* Social icon buttons */}\r\n            <View style={{ flexDirection: 'row', justifyContent: 'center', marginVertical: 16, gap: 18 }}>\r\n              <TouchableOpacity\r\n                onPress={handleGoogleSignIn}\r\n                style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}\r\n                activeOpacity={0.8}\r\n              >\r\n                <FontAwesome name=\"google\" size={28} color=\"#EA4335\" />\r\n              </TouchableOpacity>\r\n              <TouchableOpacity\r\n                onPress={signInWithFacebook}\r\n                style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}\r\n                activeOpacity={0.8}\r\n              >\r\n                <FontAwesome name=\"facebook\" size={28} color=\"#1877f3\" />\r\n              </TouchableOpacity>\r\n              <TouchableOpacity\r\n                onPress={signInWithAppleWeb}\r\n                style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}\r\n                activeOpacity={0.8}\r\n              >\r\n                <FontAwesome name=\"apple\" size={28} color=\"#000\" />\r\n              </TouchableOpacity>\r\n            </View>\r\n            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 12 }}>\r\n              <View style={{ flex: 1, height: 1, backgroundColor: '#e5e7eb' }} />\r\n              <Text style={{ marginHorizontal: 12, color: '#94a3b8', fontSize: 13 }}>OR</Text>\r\n              <View style={{ flex: 1, height: 1, backgroundColor: '#e5e7eb' }} />\r\n            </View>\r\n            <Pressable\r\n              style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}\r\n              onPress={() => router.push(\"/register\")}\r\n              accessibilityLabel=\"Go to Register\"\r\n            >\r\n              <Text style={{ color: '#64748b' }}>Don't have an account? </Text>\r\n              <Text style={{ color: '#2563eb', fontWeight: '600' }}>Sign Up</Text>\r\n            </Pressable>\r\n          </Animated.View>\r\n        </View>\r\n    </KeyboardAvoidingView>\r\n  )\r\n}\r\n\r\nexport default Login\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/(auth)/login.tsx b/app/(auth)/login.tsx
+--- a/app/(auth)/login.tsx	(revision 3fa78d0cc23c0ce196fba3d5f9689aedc47ab2d8)
++++ b/app/(auth)/login.tsx	(date 1760478054474)
+@@ -54,16 +54,16 @@
+     }
+     setIsLoading(true)
+     await login(email, password)
+-      .then((res) => {
+-        router.push("/dashboard")
+-      })
+-      .catch((err) => {
+-        setError("Login failed. Please check your credentials.")
+-        console.error(err)
+-      })
+-      .finally(() => {
+-        setIsLoading(false)
+-      })
++        .then((res) => {
++          router.push("/dashboard")
++        })
++        .catch((err) => {
++          setError("Login failed. Please check your credentials.")
++          console.error(err)
++        })
++        .finally(() => {
++          setIsLoading(false)
++        })
+   }
+ 
+   const handleGoogleSignIn = async () => {
+@@ -94,25 +94,25 @@
+   const subtitleFont = screenWidth < 400 ? 13 : screenWidth < 600 ? 15 : 16;
+ 
+   return (
+-    <KeyboardAvoidingView 
+-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+-      style={{ flex: 1 }}
+-    >
+-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: horizontalPad }}>
++      <KeyboardAvoidingView
++          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
++          style={{ flex: 1 }}
++      >
++        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: horizontalPad }}>
+           {/* Animated Gradient Background */}
+           <LinearGradient
+-            colors={["#3B82F6", "#6366F1", "#9333EA"]}
+-            start={{ x: 0, y: 0 }}
+-            end={{ x: 1, y: 1 }}
+-            style={{
+-              position: 'absolute',
+-              left: 0,
+-              top: 0,
+-              width: screenWidth,
+-              height: screenHeight,
+-              zIndex: -1,
+-              pointerEvents: 'none',
+-            }}
++              colors={["#3B82F6", "#6366F1", "#9333EA"]}
++              start={{ x: 0, y: 0 }}
++              end={{ x: 1, y: 1 }}
++              style={{
++                position: 'absolute',
++                left: 0,
++                top: 0,
++                width: screenWidth,
++                height: screenHeight,
++                zIndex: -1,
++                pointerEvents: 'none',
++              }}
+           />
+           {/* Logo and App Name Header */}
+           <Animated.View entering={FadeInDown.duration(700).springify()} style={{ alignItems: 'center', marginBottom: verticalPad, marginTop: verticalPad, width: '100%' }}>
+@@ -123,54 +123,54 @@
+ 
+           {/* Card-style Form */}
+           <Animated.View
+-            entering={FadeInUp.delay(300).duration(700).springify()}
+-            style={{
+-              width: '100%',
+-              maxWidth: CARD_MAX_WIDTH,
+-              minWidth: 0,
+-              backgroundColor: 'white',
+-              borderRadius: 28,
+-              paddingHorizontal: cardPad,
+-              paddingVertical: cardPad + 8,
+-              boxShadow: '0 8px 24px 0 rgba(0,0,0,0.09)',
+-            }}
++              entering={FadeInUp.delay(300).duration(700).springify()}
++              style={{
++                width: '100%',
++                maxWidth: CARD_MAX_WIDTH,
++                minWidth: 0,
++                backgroundColor: 'white',
++                borderRadius: 28,
++                paddingHorizontal: cardPad,
++                paddingVertical: cardPad + 8,
++                boxShadow: '0 8px 24px 0 rgba(0,0,0,0.09)',
++              }}
+           >
+             {error ? (
+-              <Text style={{ color: '#ef4444', fontSize: 15, marginBottom: 10, textAlign: 'center' }}>{error}</Text>
++                <Text style={{ color: '#ef4444', fontSize: 15, marginBottom: 10, textAlign: 'center' }}>{error}</Text>
+             ) : null}
+             <TextInput
+-              placeholder="Email"
+-              value={email}
+-              onChangeText={setEmail}
+-              style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16, fontSize: 16, color: '#222' }}
+-              autoCapitalize="none"
+-              autoComplete="off"
+-              spellCheck={false}
+-              autoCorrect={false}
+-              keyboardType="email-address"
+-              returnKeyType="next"
+-              onSubmitEditing={() => passwordRef.current?.focus()}
+-              accessibilityLabel="Email Address"
++                placeholder="Email"
++                value={email}
++                onChangeText={setEmail}
++                style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16, fontSize: 16, color: '#222' }}
++                autoCapitalize="none"
++                autoComplete="off"
++                spellCheck={false}
++                autoCorrect={false}
++                keyboardType="email-address"
++                returnKeyType="next"
++                onSubmitEditing={() => passwordRef.current?.focus()}
++                accessibilityLabel="Email Address"
+             />
+             <View style={{ position: 'relative', marginBottom: 16 }}>
+               <TextInput
+-                ref={passwordRef}
+-                placeholder="Password"
+-                value={password}
+-                onChangeText={setPassword}
+-                secureTextEntry={!showPassword}
+-                style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, color: '#222', paddingRight: 40 }}
+-                autoCapitalize="none"
+-                autoComplete="off"
+-                spellCheck={false}
+-                autoCorrect={false}
+-                returnKeyType="done"
+-                accessibilityLabel="Password"
++                  ref={passwordRef}
++                  placeholder="Password"
++                  value={password}
++                  onChangeText={setPassword}
++                  secureTextEntry={!showPassword}
++                  style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, color: '#222', paddingRight: 40 }}
++                  autoCapitalize="none"
++                  autoComplete="off"
++                  spellCheck={false}
++                  autoCorrect={false}
++                  returnKeyType="done"
++                  accessibilityLabel="Password"
+               />
+               <TouchableOpacity
+-                onPress={() => setShowPassword(!showPassword)}
+-                style={{ position: 'absolute', right: 8, top: 8, padding: 4 }}
+-                accessibilityLabel={showPassword ? "Hide Password" : "Show Password"}
++                  onPress={() => setShowPassword(!showPassword)}
++                  style={{ position: 'absolute', right: 8, top: 8, padding: 4 }}
++                  accessibilityLabel={showPassword ? "Hide Password" : "Show Password"}
+               >
+                 <FontAwesome name={showPassword ? "eye-slash" : "eye"} size={20} color="#888" />
+               </TouchableOpacity>
+@@ -180,39 +180,39 @@
+             </Pressable>
+             <Animated.View entering={FadeInUp.delay(400).duration(700).springify()}>
+               <TouchableOpacity
+-                onPress={handleLogin}
+-                disabled={isLoading}
+-                style={{ width: '100%', paddingVertical: 14, borderRadius: 12, backgroundColor: isLoading ? '#60a5fa' : '#2563eb', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}
+-                activeOpacity={0.92}
+-                accessibilityLabel="Sign In"
++                  onPress={handleLogin}
++                  disabled={isLoading}
++                  style={{ width: '100%', paddingVertical: 14, borderRadius: 12, backgroundColor: isLoading ? '#60a5fa' : '#2563eb', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}
++                  activeOpacity={0.92}
++                  accessibilityLabel="Sign In"
+               >
+                 {isLoading ? (
+-                  <ActivityIndicator color="#fff" size="small" />
++                    <ActivityIndicator color="#fff" size="small" />
+                 ) : (
+-                  <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>Sign In</Text>
++                    <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>Sign In</Text>
+                 )}
+               </TouchableOpacity>
+             </Animated.View>
+             {/* Social icon buttons */}
+             <View style={{ flexDirection: 'row', justifyContent: 'center', marginVertical: 16, gap: 18 }}>
+               <TouchableOpacity
+-                onPress={handleGoogleSignIn}
+-                style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}
+-                activeOpacity={0.8}
++                  onPress={handleGoogleSignIn}
++                  style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}
++                  activeOpacity={0.8}
+               >
+                 <FontAwesome name="google" size={28} color="#EA4335" />
+               </TouchableOpacity>
+               <TouchableOpacity
+-                onPress={signInWithFacebook}
+-                style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}
+-                activeOpacity={0.8}
++                  onPress={signInWithFacebook}
++                  style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}
++                  activeOpacity={0.8}
+               >
+                 <FontAwesome name="facebook" size={28} color="#1877f3" />
+               </TouchableOpacity>
+               <TouchableOpacity
+-                onPress={signInWithAppleWeb}
+-                style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}
+-                activeOpacity={0.8}
++                  onPress={signInWithAppleWeb}
++                  style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}
++                  activeOpacity={0.8}
+               >
+                 <FontAwesome name="apple" size={28} color="#000" />
+               </TouchableOpacity>
+@@ -223,17 +223,17 @@
+               <View style={{ flex: 1, height: 1, backgroundColor: '#e5e7eb' }} />
+             </View>
+             <Pressable
+-              style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}
+-              onPress={() => router.push("/register")}
+-              accessibilityLabel="Go to Register"
++                style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}
++                onPress={() => router.push("/register")}
++                accessibilityLabel="Go to Register"
+             >
+               <Text style={{ color: '#64748b' }}>Don't have an account? </Text>
+               <Text style={{ color: '#2563eb', fontWeight: '600' }}>Sign Up</Text>
+             </Pressable>
+           </Animated.View>
+         </View>
+-    </KeyboardAvoidingView>
++      </KeyboardAvoidingView>
+   )
+ }
+ 
+-export default Login
++export default Login
+\ No newline at end of file
+Index: app/(auth)/register.tsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import { View, Text, TextInput, TouchableOpacity, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform, useWindowDimensions } from \"react-native\"\r\nimport React, { useState } from \"react\"\r\nimport { useRouter } from \"expo-router\"\r\nimport { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';\r\nimport { LinearGradient } from 'expo-linear-gradient'\r\nimport DailySpendLogo from '../../components/DailySpendLogo';\r\nimport Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';\r\n\r\nconst CARD_MAX_WIDTH = 420;\r\n\r\nconst Register = () => {\r\n  const router = useRouter()\r\n  const [email, setEmail] = useState(\"\")\r\n  const [password, setPassword] = useState(\"\")\r\n  const [cPassword, setCPassword] = useState(\"\")\r\n  const [isLoading, setIsLoading] = useState(false)\r\n\r\n  const handleRegister = async () => {\r\n    if (isLoading) return\r\n    if (password !== cPassword) {\r\n      alert(\"Passwords do not match\")\r\n      return\r\n    }\r\n    setIsLoading(true)\r\n    try {\r\n      const auth = getAuth();\r\n      const userCredential = await createUserWithEmailAndPassword(auth, email, password);\r\n      // Only use Firebase Auth to send verification email\r\n      if (userCredential.user) {\r\n        try {\r\n          await sendEmailVerification(userCredential.user);\r\n        } catch (err: any) {\r\n          alert('Failed to send verification email: ' + (err?.message || 'Unknown error.'));\r\n          console.error('sendEmailVerification error:', err);\r\n        }\r\n      }\r\n      // Redirect to verify email screen after registration\r\n      // router.replace('/(auth)/VerifyEmailScreen');\r\n    } catch (err: any) {\r\n      alert(\"Registration failed. \" + (err?.message || \"Something went wrong.\"))\r\n      console.error(err)\r\n    } finally {\r\n      setIsLoading(false)\r\n    }\r\n  }\r\n\r\n  const { width: screenWidth, height: screenHeight } = useWindowDimensions();\r\n  const horizontalPad = screenWidth < 400 ? 12 : screenWidth < 600 ? 24 : 48;\r\n  const verticalPad = screenWidth < 400 ? 16 : screenWidth < 600 ? 24 : 36;\r\n  const cardPad = screenWidth < 400 ? 16 : screenWidth < 600 ? 24 : 36;\r\n  const appNameFont = screenWidth < 400 ? 28 : screenWidth < 600 ? 36 : 44;\r\n  const subtitleFont = screenWidth < 400 ? 13 : screenWidth < 600 ? 15 : 16;\r\n\r\n  return (\r\n    <KeyboardAvoidingView\r\n      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}\r\n      style={{ flex: 1 }}\r\n    >\r\n      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: horizontalPad }}>\r\n        <LinearGradient\r\n          colors={[\"#3B82F6\", \"#6366F1\", \"#9333EA\"]}\r\n          start={{ x: 0, y: 0 }}\r\n          end={{ x: 1, y: 1 }}\r\n          style={{\r\n            position: 'absolute',\r\n            left: 0,\r\n            top: 0,\r\n            width: screenWidth,\r\n            height: screenHeight,\r\n            zIndex: -1,\r\n            pointerEvents: 'none',\r\n          }}\r\n        />\r\n        <Animated.View entering={FadeInDown.duration(700).springify()} style={{ alignItems: 'center', marginBottom: verticalPad, marginTop: verticalPad, width: '100%' }}>\r\n          <DailySpendLogo width={96} height={96} style={{ marginBottom: 16 }} />\r\n          <Animated.Text entering={FadeInDown.delay(100).duration(700).springify()} style={{ fontSize: appNameFont, fontWeight: '800', color: 'white', letterSpacing: 2 }}>Daily Spend</Animated.Text>\r\n          <Animated.Text entering={FadeInDown.delay(200).duration(700).springify()} style={{ fontSize: subtitleFont, color: '#dbeafe', marginTop: 8 }}>Track your expenses smartly</Animated.Text>\r\n        </Animated.View>\r\n\r\n        <Animated.View\r\n          entering={FadeInUp.delay(300).duration(700).springify()}\r\n          style={{\r\n            width: '100%',\r\n            maxWidth: CARD_MAX_WIDTH,\r\n            minWidth: 0,\r\n            backgroundColor: 'white',\r\n            borderRadius: 28,\r\n            paddingHorizontal: cardPad,\r\n            paddingVertical: cardPad + 8,\r\n            boxShadow: '0 8px 24px 0 rgba(0,0,0,0.09)',\r\n          }}\r\n        >\r\n          <TextInput\r\n            placeholder=\"Email\"\r\n            value={email}\r\n            onChangeText={setEmail}\r\n            style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16, fontSize: 16, color: '#222' }}\r\n            autoCapitalize=\"none\"\r\n            autoComplete=\"off\"\r\n            spellCheck={false}\r\n            autoCorrect={false}\r\n          />\r\n          <TextInput\r\n            placeholder=\"Password\"\r\n            value={password}\r\n            onChangeText={setPassword}\r\n            secureTextEntry\r\n            style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16, fontSize: 16, color: '#222' }}\r\n            autoCapitalize=\"none\"\r\n            autoComplete=\"off\"\r\n            spellCheck={false}\r\n            autoCorrect={false}\r\n          />\r\n          <TextInput\r\n            placeholder=\"Confirm password\"\r\n            value={cPassword}\r\n            onChangeText={setCPassword}\r\n            secureTextEntry\r\n            style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16, fontSize: 16, color: '#222' }}\r\n            autoCapitalize=\"none\"\r\n            autoComplete=\"off\"\r\n            spellCheck={false}\r\n            autoCorrect={false}\r\n          />\r\n          <Animated.View entering={FadeInUp.delay(400).duration(700).springify()}>\r\n            <TouchableOpacity\r\n              onPress={handleRegister}\r\n              disabled={isLoading}\r\n              style={{ width: '100%', paddingVertical: 14, borderRadius: 12, backgroundColor: isLoading ? '#60a5fa' : '#2563eb', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}\r\n              activeOpacity={0.92}\r\n            >\r\n              {isLoading ? (\r\n                <ActivityIndicator color=\"#fff\" size=\"small\" />\r\n              ) : (\r\n                <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>Register</Text>\r\n              )}\r\n            </TouchableOpacity>\r\n          </Animated.View>\r\n          <Pressable style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }} onPress={() => router.back()}>\r\n            <Text style={{ color: '#64748b' }}>Already have an account? </Text>\r\n            <Text style={{ color: '#2563eb', fontWeight: '600' }}>Login</Text>\r\n          </Pressable>\r\n        </Animated.View>\r\n      </View>\r\n    </KeyboardAvoidingView>\r\n  )\r\n}\r\n\r\nexport default Register\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/(auth)/register.tsx b/app/(auth)/register.tsx
+--- a/app/(auth)/register.tsx	(revision 3fa78d0cc23c0ce196fba3d5f9689aedc47ab2d8)
++++ b/app/(auth)/register.tsx	(date 1760478054475)
+@@ -1,8 +1,9 @@
+-import { View, Text, TextInput, TouchableOpacity, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform, useWindowDimensions } from "react-native"
+-import React, { useState } from "react"
+-import { useRouter } from "expo-router"
+-import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+-import { LinearGradient } from 'expo-linear-gradient'
++import { View, Text, TextInput, TouchableOpacity, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform, useWindowDimensions, Alert, StyleSheet } from "react-native";
++import React, { useState } from "react";
++import { MaterialIcons } from '@expo/vector-icons';
++import { useRouter } from "expo-router";
++import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, AuthError } from 'firebase/auth';
++import { LinearGradient } from 'expo-linear-gradient';
+ import DailySpendLogo from '../../components/DailySpendLogo';
+ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+ 
+@@ -10,37 +11,51 @@
+ 
+ const Register = () => {
+   const router = useRouter()
+-  const [email, setEmail] = useState("")
+-  const [password, setPassword] = useState("")
+-  const [cPassword, setCPassword] = useState("")
+-  const [isLoading, setIsLoading] = useState(false)
++  const [email, setEmail] = useState("");
++  const [password, setPassword] = useState("");
++  const [cPassword, setCPassword] = useState("");
++  const [isLoading, setIsLoading] = useState(false);
++  const [showPassword, setShowPassword] = useState(false);
++  const [showCPassword, setShowCPassword] = useState(false);
+ 
+   const handleRegister = async () => {
+-    if (isLoading) return
++    if (isLoading) return;
+     if (password !== cPassword) {
+-      alert("Passwords do not match")
+-      return
++      Alert.alert("Error", "Passwords do not match");
++      return;
++    }
++    if (password.length < 6) {
++      Alert.alert("Error", "Password should be at least 6 characters long");
++      return;
+     }
+-    setIsLoading(true)
++    if (!email.includes('@')) {
++      Alert.alert("Error", "Please enter a valid email address");
++      return;
++    }
++    
++    setIsLoading(true);
+     try {
+       const auth = getAuth();
+       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+-      // Only use Firebase Auth to send verification email
++      
+       if (userCredential.user) {
+-        try {
+-          await sendEmailVerification(userCredential.user);
+-        } catch (err: any) {
+-          alert('Failed to send verification email: ' + (err?.message || 'Unknown error.'));
+-          console.error('sendEmailVerification error:', err);
+-        }
++        // Send verification email in the background
++        sendEmailVerification(userCredential.user).catch(err => {
++          console.warn('Failed to send verification email:', err);
++          // Don't show error to user, just log it
++        });
++        // Navigate to dashboard on successful registration
++        router.replace('/dashboard');
+       }
+-      // Redirect to verify email screen after registration
+-      // router.replace('/(auth)/VerifyEmailScreen');
+-    } catch (err: any) {
+-      alert("Registration failed. " + (err?.message || "Something went wrong."))
+-      console.error(err)
++    } catch (err) {
++      const error = err as AuthError;
++      Alert.alert(
++        'Registration Failed', 
++        error.message || 'Something went wrong during registration. Please try again.'
++      );
++      console.error('Registration error:', error);
+     } finally {
+-      setIsLoading(false)
++      setIsLoading(false);
+     }
+   }
+ 
+@@ -52,98 +67,169 @@
+   const subtitleFont = screenWidth < 400 ? 13 : screenWidth < 600 ? 15 : 16;
+ 
+   return (
+-    <KeyboardAvoidingView
+-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+-      style={{ flex: 1 }}
+-    >
+-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: horizontalPad }}>
+-        <LinearGradient
+-          colors={["#3B82F6", "#6366F1", "#9333EA"]}
+-          start={{ x: 0, y: 0 }}
+-          end={{ x: 1, y: 1 }}
+-          style={{
+-            position: 'absolute',
+-            left: 0,
+-            top: 0,
+-            width: screenWidth,
+-            height: screenHeight,
+-            zIndex: -1,
+-            pointerEvents: 'none',
+-          }}
+-        />
+-        <Animated.View entering={FadeInDown.duration(700).springify()} style={{ alignItems: 'center', marginBottom: verticalPad, marginTop: verticalPad, width: '100%' }}>
+-          <DailySpendLogo width={96} height={96} style={{ marginBottom: 16 }} />
+-          <Animated.Text entering={FadeInDown.delay(100).duration(700).springify()} style={{ fontSize: appNameFont, fontWeight: '800', color: 'white', letterSpacing: 2 }}>Daily Spend</Animated.Text>
+-          <Animated.Text entering={FadeInDown.delay(200).duration(700).springify()} style={{ fontSize: subtitleFont, color: '#dbeafe', marginTop: 8 }}>Track your expenses smartly</Animated.Text>
+-        </Animated.View>
++      <KeyboardAvoidingView
++          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
++          style={{ flex: 1 }}
++      >
++        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: horizontalPad }}>
++          <LinearGradient
++              colors={["#3B82F6", "#6366F1", "#9333EA"]}
++              start={{ x: 0, y: 0 }}
++              end={{ x: 1, y: 1 }}
++              style={{
++                position: 'absolute',
++                left: 0,
++                top: 0,
++                width: screenWidth,
++                height: screenHeight,
++                zIndex: -1,
++                pointerEvents: 'none',
++              }}
++          />
++          <Animated.View entering={FadeInDown.duration(700).springify()} style={{ alignItems: 'center', marginBottom: verticalPad, marginTop: verticalPad, width: '100%' }}>
++            <DailySpendLogo width={96} height={96} style={{ marginBottom: 16 }} />
++            <Animated.Text entering={FadeInDown.delay(100).duration(700).springify()} style={{ fontSize: appNameFont, fontWeight: '800', color: 'white', letterSpacing: 2 }}>Daily Spend</Animated.Text>
++            <Animated.Text entering={FadeInDown.delay(200).duration(700).springify()} style={{ fontSize: subtitleFont, color: '#dbeafe', marginTop: 8 }}>Track your expenses smartly</Animated.Text>
++          </Animated.View>
+ 
+-        <Animated.View
+-          entering={FadeInUp.delay(300).duration(700).springify()}
+-          style={{
+-            width: '100%',
+-            maxWidth: CARD_MAX_WIDTH,
+-            minWidth: 0,
+-            backgroundColor: 'white',
+-            borderRadius: 28,
+-            paddingHorizontal: cardPad,
+-            paddingVertical: cardPad + 8,
+-            boxShadow: '0 8px 24px 0 rgba(0,0,0,0.09)',
+-          }}
+-        >
+-          <TextInput
+-            placeholder="Email"
+-            value={email}
+-            onChangeText={setEmail}
+-            style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16, fontSize: 16, color: '#222' }}
+-            autoCapitalize="none"
+-            autoComplete="off"
+-            spellCheck={false}
+-            autoCorrect={false}
+-          />
+-          <TextInput
+-            placeholder="Password"
+-            value={password}
+-            onChangeText={setPassword}
+-            secureTextEntry
+-            style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16, fontSize: 16, color: '#222' }}
+-            autoCapitalize="none"
+-            autoComplete="off"
+-            spellCheck={false}
+-            autoCorrect={false}
+-          />
+-          <TextInput
+-            placeholder="Confirm password"
+-            value={cPassword}
+-            onChangeText={setCPassword}
+-            secureTextEntry
+-            style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16, fontSize: 16, color: '#222' }}
+-            autoCapitalize="none"
+-            autoComplete="off"
+-            spellCheck={false}
+-            autoCorrect={false}
+-          />
+-          <Animated.View entering={FadeInUp.delay(400).duration(700).springify()}>
+-            <TouchableOpacity
+-              onPress={handleRegister}
+-              disabled={isLoading}
+-              style={{ width: '100%', paddingVertical: 14, borderRadius: 12, backgroundColor: isLoading ? '#60a5fa' : '#2563eb', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}
+-              activeOpacity={0.92}
+-            >
+-              {isLoading ? (
+-                <ActivityIndicator color="#fff" size="small" />
+-              ) : (
+-                <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>Register</Text>
+-              )}
+-            </TouchableOpacity>
+-          </Animated.View>
+-          <Pressable style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }} onPress={() => router.back()}>
+-            <Text style={{ color: '#64748b' }}>Already have an account? </Text>
+-            <Text style={{ color: '#2563eb', fontWeight: '600' }}>Login</Text>
+-          </Pressable>
+-        </Animated.View>
+-      </View>
+-    </KeyboardAvoidingView>
+-  )
+-}
++          <Animated.View
++              entering={FadeInUp.delay(300).duration(700).springify()}
++              style={[
++                styles.card,
++                {
++                  width: '100%',
++                  maxWidth: CARD_MAX_WIDTH,
++                  minWidth: 0,
++                  paddingHorizontal: cardPad,
++                  paddingVertical: cardPad + 8,
++                }
++              ]}
++          >
++            <TextInput
++                placeholder="Email"
++                value={email}
++                onChangeText={setEmail}
++                style={styles.input}
++                autoCapitalize="none"
++                autoComplete="off"
++                spellCheck={false}
++                autoCorrect={false}
++            />
++            <View style={styles.passwordContainer}>
++              <TextInput
++                  placeholder="Password"
++                  value={password}
++                  onChangeText={setPassword}
++                  secureTextEntry={!showPassword}
++                  style={[styles.input, { paddingRight: 40 }]}
++                  autoCapitalize="none"
++                  autoComplete="off"
++                  spellCheck={false}
++                  autoCorrect={false}
++              />
++              <TouchableOpacity 
++                onPress={() => setShowPassword(!showPassword)}
++                style={styles.eyeIcon}
++              >
++                <MaterialIcons 
++                  name={showPassword ? 'visibility-off' : 'visibility'} 
++                  size={24} 
++                  color="#666" 
++                />
++              </TouchableOpacity>
++            </View>
++            <View style={styles.passwordContainer}>
++              <TextInput
++                  placeholder="Confirm password"
++                  value={cPassword}
++                  onChangeText={setCPassword}
++                  secureTextEntry={!showCPassword}
++                  style={[styles.input, { paddingRight: 40 }]}
++                  autoCapitalize="none"
++                  autoComplete="off"
++                  spellCheck={false}
++                  autoCorrect={false}
++              />
++              <TouchableOpacity 
++                onPress={() => setShowCPassword(!showCPassword)}
++                style={styles.eyeIcon}
++              >
++                <MaterialIcons 
++                  name={showCPassword ? 'visibility-off' : 'visibility'} 
++                  size={24} 
++                  color="#666" 
++                />
++              </TouchableOpacity>
++            </View>
++            <Animated.View entering={FadeInUp.delay(400).duration(700).springify()}>
++              <TouchableOpacity
++                  onPress={handleRegister}
++                  disabled={isLoading}
++                  style={[styles.button, { backgroundColor: isLoading ? '#60a5fa' : '#2563eb' }]}
++                  activeOpacity={0.92}
++              >
++                {isLoading ? (
++                    <ActivityIndicator color="#fff" size="small" />
++                ) : (
++                    <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>Register</Text>
++                )}
++              </TouchableOpacity>
++            </Animated.View>
++            <Pressable style={styles.loginLink} onPress={() => router.back()}>
++              <Text style={{ color: '#64748b' }}>Already have an account? </Text>
++              <Text style={{ color: '#2563eb', fontWeight: '600' }}>Login</Text>
++            </Pressable>
++          </Animated.View>
++        </View>
++      </KeyboardAvoidingView>
++  );
++};
+ 
+-export default Register
++const styles = StyleSheet.create({
++  card: {
++    backgroundColor: 'white',
++    borderRadius: 28,
++    shadowColor: '#000',
++    shadowOffset: { width: 0, height: 4 },
++    shadowOpacity: 0.09,
++    shadowRadius: 24,
++    elevation: 8,
++  },
++  input: {
++    backgroundColor: '#fff',
++    borderColor: '#ccc',
++    borderWidth: 1,
++    borderRadius: 8,
++    paddingHorizontal: 16,
++    paddingVertical: 12,
++    marginBottom: 16,
++    fontSize: 16,
++    color: '#222',
++  },
++  button: {
++    width: '100%',
++    paddingVertical: 14,
++    borderRadius: 12,
++    alignItems: 'center',
++    justifyContent: 'center',
++    marginBottom: 16,
++  },
++  loginLink: {
++    flexDirection: 'row',
++    justifyContent: 'center',
++    marginTop: 8,
++  },
++  passwordContainer: {
++    position: 'relative',
++    width: '100%',
++    marginBottom: 16,
++  },
++  eyeIcon: {
++    position: 'absolute',
++    right: 12,
++    top: 12,
++    padding: 4,
++  },
++});
++
++export default Register;
+\ No newline at end of file
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"AutoImportSettings\">\r\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\r\n  </component>\r\n  <component name=\"ChangeListManager\">\r\n    <list default=\"true\" id=\"653719e4-b763-4df1-b0fc-cbfbe9655c4d\" name=\"Changes\" comment=\"Added ErrorBoundary component for improved error handling, implemented OTP verification screen, and integrated social authentication flows for Google, Facebook, and Apple. Enhanced shadow styles for dashboard elements and updated dependencies.\">\r\n      <change afterPath=\"$PROJECT_DIR$/eas.json\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/app.json\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/app.json\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/package-lock.json\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/package-lock.json\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/package.json\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/package.json\" afterDir=\"false\" />\r\n    </list>\r\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\r\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\r\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\r\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\r\n  </component>\r\n  <component name=\"Git.Settings\">\r\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\r\n  </component>\r\n  <component name=\"GitHubPullRequestSearchHistory\">{\r\n  &quot;lastFilter&quot;: {\r\n    &quot;state&quot;: &quot;OPEN&quot;,\r\n    &quot;assignee&quot;: &quot;charitha200304&quot;\r\n  }\r\n}</component>\r\n  <component name=\"GithubPullRequestsUISettings\">{\r\n  &quot;selectedUrlAndAccountId&quot;: {\r\n    &quot;url&quot;: &quot;https://github.com/charitha200304/Daily-Spend-Apk.git&quot;,\r\n    &quot;accountId&quot;: &quot;a0f88cd5-1181-4bc9-8f99-5e5e6fd2b5cd&quot;\r\n  }\r\n}</component>\r\n  <component name=\"ProjectColorInfo\">{\r\n  &quot;customColor&quot;: &quot;&quot;,\r\n  &quot;associatedIndex&quot;: 5\r\n}</component>\r\n  <component name=\"ProjectId\" id=\"3304Zza9IkTSl4ceZUHXQMJy09Y\" />\r\n  <component name=\"ProjectViewState\">\r\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\r\n    <option name=\"showLibraryContents\" value=\"true\" />\r\n  </component>\r\n  <component name=\"PropertiesComponent\">{\r\n  &quot;keyToString&quot;: {\r\n    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,\r\n    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,\r\n    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,\r\n    &quot;git-widget-placeholder&quot;: &quot;master&quot;,\r\n    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,\r\n    &quot;last_opened_file_path&quot;: &quot;D:/IdeaProjects/Daily Spend/assets/images&quot;,\r\n    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,\r\n    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,\r\n    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,\r\n    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,\r\n    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,\r\n    &quot;settings.editor.selected.configurable&quot;: &quot;com.codeium.AppSettingsConfigurable&quot;,\r\n    &quot;ts.external.directory.path&quot;: &quot;D:\\\\IdeaProjects\\\\Daily Spend\\\\node_modules\\\\typescript\\\\lib&quot;,\r\n    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;\r\n  }\r\n}</component>\r\n  <component name=\"RecentsManager\">\r\n    <key name=\"CopyFile.RECENT_KEYS\">\r\n      <recent name=\"D:\\IdeaProjects\\Daily Spend\\assets\\images\" />\r\n    </key>\r\n    <key name=\"MoveFile.RECENT_KEYS\">\r\n      <recent name=\"D:\\IdeaProjects\\Daily Spend\\app\\(dashboard)\" />\r\n      <recent name=\"D:\\IdeaProjects\\Daily Spend\\app\\(dashboard)\\tasks\" />\r\n    </key>\r\n  </component>\r\n  <component name=\"SharedIndexes\">\r\n    <attachedChunks>\r\n      <set>\r\n        <option value=\"bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.26094.121\" />\r\n        <option value=\"bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-IU-251.26094.121\" />\r\n      </set>\r\n    </attachedChunks>\r\n  </component>\r\n  <component name=\"TaskManager\">\r\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\r\n      <changelist id=\"653719e4-b763-4df1-b0fc-cbfbe9655c4d\" name=\"Changes\" comment=\"\" />\r\n      <created>1758440715461</created>\r\n      <option name=\"number\" value=\"Default\" />\r\n      <option name=\"presentableId\" value=\"Default\" />\r\n      <updated>1758440715461</updated>\r\n      <workItem from=\"1758440717334\" duration=\"104000\" />\r\n      <workItem from=\"1758440933523\" duration=\"17000\" />\r\n      <workItem from=\"1758441007956\" duration=\"1412000\" />\r\n      <workItem from=\"1758442459159\" duration=\"318000\" />\r\n      <workItem from=\"1758472033539\" duration=\"19213000\" />\r\n      <workItem from=\"1758491464645\" duration=\"174000\" />\r\n      <workItem from=\"1758491681675\" duration=\"10286000\" />\r\n      <workItem from=\"1758502106598\" duration=\"444000\" />\r\n      <workItem from=\"1758502577314\" duration=\"425000\" />\r\n      <workItem from=\"1758503058825\" duration=\"1186000\" />\r\n      <workItem from=\"1758504295177\" duration=\"566000\" />\r\n      <workItem from=\"1758504906374\" duration=\"1109000\" />\r\n      <workItem from=\"1758506052371\" duration=\"1798000\" />\r\n      <workItem from=\"1758511779015\" duration=\"14745000\" />\r\n      <workItem from=\"1758708318950\" duration=\"920000\" />\r\n      <workItem from=\"1758709494418\" duration=\"9213000\" />\r\n    </task>\r\n    <task id=\"LOCAL-00001\" summary=\"Dashboard ui done\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1758488108230</created>\r\n      <option name=\"number\" value=\"00001\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00001\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1758488108230</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00002\" summary=\"Refactored and enhanced the dashboard UI, added category and profile management features.\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1758505099654</created>\r\n      <option name=\"number\" value=\"00002\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00002\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1758505099654</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00003\" summary=\"Implemented animated drawer navigation, improved styling for dashboard/header, refactored category selection, and added logout functionality.\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1758516111317</created>\r\n      <option name=\"number\" value=\"00003\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00003\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1758516111317</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00004\" summary=\"Added ErrorBoundary component for improved error handling, implemented OTP verification screen, and integrated social authentication flows for Google, Facebook, and Apple. Enhanced shadow styles for dashboard elements and updated dependencies.\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1758526008430</created>\r\n      <option name=\"number\" value=\"00004\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00004\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1758526008431</updated>\r\n    </task>\r\n    <option name=\"localTasksCounter\" value=\"5\" />\r\n    <servers />\r\n  </component>\r\n  <component name=\"TypeScriptGeneratedFilesManager\">\r\n    <option name=\"version\" value=\"3\" />\r\n  </component>\r\n  <component name=\"VcsManagerConfiguration\">\r\n    <MESSAGE value=\"Dashboard ui done\" />\r\n    <MESSAGE value=\"Refactored and enhanced the dashboard UI, added category and profile management features.\" />\r\n    <MESSAGE value=\"Implemented animated drawer navigation, improved styling for dashboard/header, refactored category selection, and added logout functionality.\" />\r\n    <MESSAGE value=\"Added ErrorBoundary component for improved error handling, implemented OTP verification screen, and integrated social authentication flows for Google, Facebook, and Apple. Enhanced shadow styles for dashboard elements and updated dependencies.\" />\r\n    <option name=\"LAST_COMMIT_MESSAGE\" value=\"Added ErrorBoundary component for improved error handling, implemented OTP verification screen, and integrated social authentication flows for Google, Facebook, and Apple. Enhanced shadow styles for dashboard elements and updated dependencies.\" />\r\n  </component>\r\n  <component name=\"XSLT-Support.FileAssociations.UIState\">\r\n    <expand />\r\n    <select />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision 3fa78d0cc23c0ce196fba3d5f9689aedc47ab2d8)
++++ b/.idea/workspace.xml	(date 1760478054472)
+@@ -4,12 +4,13 @@
+     <option name="autoReloadType" value="SELECTIVE" />
+   </component>
+   <component name="ChangeListManager">
+-    <list default="true" id="653719e4-b763-4df1-b0fc-cbfbe9655c4d" name="Changes" comment="Added ErrorBoundary component for improved error handling, implemented OTP verification screen, and integrated social authentication flows for Google, Facebook, and Apple. Enhanced shadow styles for dashboard elements and updated dependencies.">
+-      <change afterPath="$PROJECT_DIR$/eas.json" afterDir="false" />
++    <list default="true" id="653719e4-b763-4df1-b0fc-cbfbe9655c4d" name="Changes" comment="">
+       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/app.json" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/app/(auth)/login.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/login.tsx" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/app/(auth)/register.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/register.tsx" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/eas.json" beforeDir="false" afterPath="$PROJECT_DIR$/eas.json" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -98,6 +99,12 @@
+       <workItem from="1758511779015" duration="14745000" />
+       <workItem from="1758708318950" duration="920000" />
+       <workItem from="1758709494418" duration="9213000" />
++      <workItem from="1758790821619" duration="15925000" />
++      <workItem from="1758857366765" duration="3947000" />
++      <workItem from="1759006811144" duration="3000" />
++      <workItem from="1760207857293" duration="412000" />
++      <workItem from="1760474749156" duration="1815000" />
++      <workItem from="1760476581256" duration="1423000" />
+     </task>
+     <task id="LOCAL-00001" summary="Dashboard ui done">
+       <option name="closed" value="true" />
+@@ -131,18 +138,47 @@
+       <option name="project" value="LOCAL" />
+       <updated>1758526008431</updated>
+     </task>
+-    <option name="localTasksCounter" value="5" />
++    <task id="LOCAL-00005" summary="Removed `react-native-svg-uri` due to deprecation, added `eas.json` for build configuration, integrated Prettier and Tailwind Prettier plugin, updated scripts in `package.json`, and improved email verification flow with backend OTP handling.">
++      <option name="closed" value="true" />
++      <created>1758823302436</created>
++      <option name="number" value="00005" />
++      <option name="presentableId" value="LOCAL-00005" />
++      <option name="project" value="LOCAL" />
++      <updated>1758823302436</updated>
++    </task>
++    <task id="LOCAL-00006" summary="Removed `OtpVerificationScreen` and `VerifyEmailScreen`, transitioned to Firebase's action code verification, updated email verification flow, and added deep linking configuration for improved navigation.">
++      <option name="closed" value="true" />
++      <created>1758826797073</created>
++      <option name="number" value="00006" />
++      <option name="presentableId" value="LOCAL-00006" />
++      <option name="project" value="LOCAL" />
++      <updated>1758826797073</updated>
++    </task>
++    <option name="localTasksCounter" value="7" />
+     <servers />
+   </component>
+   <component name="TypeScriptGeneratedFilesManager">
+     <option name="version" value="3" />
+   </component>
++  <component name="Vcs.Log.Tabs.Properties">
++    <option name="TAB_STATES">
++      <map>
++        <entry key="MAIN">
++          <value>
++            <State />
++          </value>
++        </entry>
++      </map>
++    </option>
++  </component>
+   <component name="VcsManagerConfiguration">
+     <MESSAGE value="Dashboard ui done" />
+     <MESSAGE value="Refactored and enhanced the dashboard UI, added category and profile management features." />
+     <MESSAGE value="Implemented animated drawer navigation, improved styling for dashboard/header, refactored category selection, and added logout functionality." />
+     <MESSAGE value="Added ErrorBoundary component for improved error handling, implemented OTP verification screen, and integrated social authentication flows for Google, Facebook, and Apple. Enhanced shadow styles for dashboard elements and updated dependencies." />
+-    <option name="LAST_COMMIT_MESSAGE" value="Added ErrorBoundary component for improved error handling, implemented OTP verification screen, and integrated social authentication flows for Google, Facebook, and Apple. Enhanced shadow styles for dashboard elements and updated dependencies." />
++    <MESSAGE value="Removed `react-native-svg-uri` due to deprecation, added `eas.json` for build configuration, integrated Prettier and Tailwind Prettier plugin, updated scripts in `package.json`, and improved email verification flow with backend OTP handling." />
++    <MESSAGE value="Removed `OtpVerificationScreen` and `VerifyEmailScreen`, transitioned to Firebase's action code verification, updated email verification flow, and added deep linking configuration for improved navigation." />
++    <option name="LAST_COMMIT_MESSAGE" value="Removed `OtpVerificationScreen` and `VerifyEmailScreen`, transitioned to Firebase's action code verification, updated email verification flow, and added deep linking configuration for improved navigation." />
+   </component>
+   <component name="XSLT-Support.FileAssociations.UIState">
+     <expand />
+Index: tsconfig.json
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>{\r\n  \"extends\": \"expo/tsconfig.base\",\r\n  \"compilerOptions\": {\r\n    \"strict\": true,\r\n    \"paths\": {\r\n      \"@/*\": [\r\n        \"./*\"\r\n      ]\r\n    }\r\n  },\r\n  \"include\": [\r\n    \"**/*.ts\",\r\n    \"**/*.tsx\",\r\n    \".expo/types/**/*.ts\",\r\n    \"expo-env.d.ts\",\r\n    \"nativewind-env.d.ts\"\r\n  ]\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tsconfig.json b/tsconfig.json
+--- a/tsconfig.json	(revision 3fa78d0cc23c0ce196fba3d5f9689aedc47ab2d8)
++++ b/tsconfig.json	(date 1760478054476)
+@@ -2,6 +2,8 @@
+   "extends": "expo/tsconfig.base",
+   "compilerOptions": {
+     "strict": true,
++    "lib": ["esnext"],
++    "types": ["react", "react-native"],
+     "paths": {
+       "@/*": [
+         "./*"
