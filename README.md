@@ -1,7 +1,7 @@
 # 💸 Daily Spend App
 
-[▶️ Watch Demo on YouTube](https://youtube.com/shorts/nndjLxmDQX8?si=d-icpxnJmUvv5Jgj)
-[⬇️ Download APK](https://drive.google.com/file/d/1PrJ1GeqWI0sXVDPaCr6_y4KA-chFp__o/view?usp=sharing)
+[▶️ Watch Demo on YouTube](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+[⬇️ Download APK](https://your-domain.com/path/to/your-app.apk)
 
 A cross-platform expense tracking app built with Expo, React Native, and Firebase. Track your daily expenses, register securely with email authentication, and enjoy seamless navigation with deep linking support.
 

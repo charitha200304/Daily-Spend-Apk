@@ -54,16 +54,16 @@ const Login = () => {
     }
     setIsLoading(true)
     await login(email, password)
-      .then((res) => {
-        router.push("/dashboard")
-      })
-      .catch((err) => {
-        setError("Login failed. Please check your credentials.")
-        console.error(err)
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
+        .then((res) => {
+          router.push("/dashboard")
+        })
+        .catch((err) => {
+          setError("Login failed. Please check your credentials.")
+          console.error(err)
+        })
+        .finally(() => {
+          setIsLoading(false)
+        })
   }
 
   const handleGoogleSignIn = async () => {
@@ -94,25 +94,25 @@ const Login = () => {
   const subtitleFont = screenWidth < 400 ? 13 : screenWidth < 600 ? 15 : 16;
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
-    >
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: horizontalPad }}>
+      <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: horizontalPad }}>
           {/* Animated Gradient Background */}
           <LinearGradient
-            colors={["#3B82F6", "#6366F1", "#9333EA"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              width: screenWidth,
-              height: screenHeight,
-              zIndex: -1,
-              pointerEvents: 'none',
-            }}
+              colors={["#3B82F6", "#6366F1", "#9333EA"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: screenWidth,
+                height: screenHeight,
+                zIndex: -1,
+                pointerEvents: 'none',
+              }}
           />
           {/* Logo and App Name Header */}
           <Animated.View entering={FadeInDown.duration(700).springify()} style={{ alignItems: 'center', marginBottom: verticalPad, marginTop: verticalPad, width: '100%' }}>
@@ -123,54 +123,54 @@ const Login = () => {
 
           {/* Card-style Form */}
           <Animated.View
-            entering={FadeInUp.delay(300).duration(700).springify()}
-            style={{
-              width: '100%',
-              maxWidth: CARD_MAX_WIDTH,
-              minWidth: 0,
-              backgroundColor: 'white',
-              borderRadius: 28,
-              paddingHorizontal: cardPad,
-              paddingVertical: cardPad + 8,
-              boxShadow: '0 8px 24px 0 rgba(0,0,0,0.09)',
-            }}
+              entering={FadeInUp.delay(300).duration(700).springify()}
+              style={{
+                width: '100%',
+                maxWidth: CARD_MAX_WIDTH,
+                minWidth: 0,
+                backgroundColor: 'white',
+                borderRadius: 28,
+                paddingHorizontal: cardPad,
+                paddingVertical: cardPad + 8,
+                boxShadow: '0 8px 24px 0 rgba(0,0,0,0.09)',
+              }}
           >
             {error ? (
-              <Text style={{ color: '#ef4444', fontSize: 15, marginBottom: 10, textAlign: 'center' }}>{error}</Text>
+                <Text style={{ color: '#ef4444', fontSize: 15, marginBottom: 10, textAlign: 'center' }}>{error}</Text>
             ) : null}
             <TextInput
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16, fontSize: 16, color: '#222' }}
-              autoCapitalize="none"
-              autoComplete="off"
-              spellCheck={false}
-              autoCorrect={false}
-              keyboardType="email-address"
-              returnKeyType="next"
-              onSubmitEditing={() => passwordRef.current?.focus()}
-              accessibilityLabel="Email Address"
-            />
-            <View style={{ position: 'relative', marginBottom: 16 }}>
-              <TextInput
-                ref={passwordRef}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, color: '#222', paddingRight: 40 }}
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16, fontSize: 16, color: '#222' }}
                 autoCapitalize="none"
                 autoComplete="off"
                 spellCheck={false}
                 autoCorrect={false}
-                returnKeyType="done"
-                accessibilityLabel="Password"
+                keyboardType="email-address"
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                accessibilityLabel="Email Address"
+            />
+            <View style={{ position: 'relative', marginBottom: 16 }}>
+              <TextInput
+                  ref={passwordRef}
+                  placeholder="Password"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  style={{ backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, color: '#222', paddingRight: 40 }}
+                  autoCapitalize="none"
+                  autoComplete="off"
+                  spellCheck={false}
+                  autoCorrect={false}
+                  returnKeyType="done"
+                  accessibilityLabel="Password"
               />
               <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: 8, top: 8, padding: 4 }}
-                accessibilityLabel={showPassword ? "Hide Password" : "Show Password"}
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: 8, top: 8, padding: 4 }}
+                  accessibilityLabel={showPassword ? "Hide Password" : "Show Password"}
               >
                 <FontAwesome name={showPassword ? "eye-slash" : "eye"} size={20} color="#888" />
               </TouchableOpacity>
@@ -180,39 +180,39 @@ const Login = () => {
             </Pressable>
             <Animated.View entering={FadeInUp.delay(400).duration(700).springify()}>
               <TouchableOpacity
-                onPress={handleLogin}
-                disabled={isLoading}
-                style={{ width: '100%', paddingVertical: 14, borderRadius: 12, backgroundColor: isLoading ? '#60a5fa' : '#2563eb', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}
-                activeOpacity={0.92}
-                accessibilityLabel="Sign In"
+                  onPress={handleLogin}
+                  disabled={isLoading}
+                  style={{ width: '100%', paddingVertical: 14, borderRadius: 12, backgroundColor: isLoading ? '#60a5fa' : '#2563eb', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}
+                  activeOpacity={0.92}
+                  accessibilityLabel="Sign In"
               >
                 {isLoading ? (
-                  <ActivityIndicator color="#fff" size="small" />
+                    <ActivityIndicator color="#fff" size="small" />
                 ) : (
-                  <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>Sign In</Text>
+                    <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>Sign In</Text>
                 )}
               </TouchableOpacity>
             </Animated.View>
             {/* Social icon buttons */}
             <View style={{ flexDirection: 'row', justifyContent: 'center', marginVertical: 16, gap: 18 }}>
               <TouchableOpacity
-                onPress={handleGoogleSignIn}
-                style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}
-                activeOpacity={0.8}
+                  onPress={handleGoogleSignIn}
+                  style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}
+                  activeOpacity={0.8}
               >
                 <FontAwesome name="google" size={28} color="#EA4335" />
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={signInWithFacebook}
-                style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}
-                activeOpacity={0.8}
+                  onPress={signInWithFacebook}
+                  style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}
+                  activeOpacity={0.8}
               >
                 <FontAwesome name="facebook" size={28} color="#1877f3" />
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={signInWithAppleWeb}
-                style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}
-                activeOpacity={0.8}
+                  onPress={signInWithAppleWeb}
+                  style={{ backgroundColor: '#fff', borderRadius: 50, padding: 14, borderWidth: 1, borderColor: '#ccc', marginHorizontal: 4 }}
+                  activeOpacity={0.8}
               >
                 <FontAwesome name="apple" size={28} color="#000" />
               </TouchableOpacity>
@@ -223,16 +223,16 @@ const Login = () => {
               <View style={{ flex: 1, height: 1, backgroundColor: '#e5e7eb' }} />
             </View>
             <Pressable
-              style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}
-              onPress={() => router.push("/register")}
-              accessibilityLabel="Go to Register"
+                style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}
+                onPress={() => router.push("/register")}
+                accessibilityLabel="Go to Register"
             >
               <Text style={{ color: '#64748b' }}>Don't have an account? </Text>
               <Text style={{ color: '#2563eb', fontWeight: '600' }}>Sign Up</Text>
             </Pressable>
           </Animated.View>
         </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
   )
 }
 
